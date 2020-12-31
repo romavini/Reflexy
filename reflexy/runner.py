@@ -90,7 +90,7 @@ class Runner:
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 for ray in self.laser_group.sprites():
-                    ray.animate()
+                    ray.shot()
 
     def update_score(self):
         for player in self.player_group:
@@ -99,7 +99,7 @@ class Runner:
     def update_frame(self):
         self.screen.blit(self.background, (0, 0))
 
-        [direction, aim] = Ann().update(
+        [direction, aim, radar_x, radar_y] = Ann().update(
             self.player_group.sprites()[0].rect.center,
             self.enemy_group.sprites()[0].rect.center,
         )
@@ -109,19 +109,21 @@ class Runner:
             pygame.Color(0, 64, 64, 64),
             (
                 self.enemy_group.sprites()[0].rect.center[0],
-                self.enemy_group.sprites()[0].rect.center[1],
+                self.enemy_group.sprites()[0].rect.center[1] - 9,
             ),
             SPIDER_VISION,
             1,
         )
-
-        radar = self.enemy_group.sprites()[0].rect.center
-        radar_len = 200
-        x = radar[0] + math.cos(math.radians(aim + 90)) * radar_len
-        y = radar[1] + math.sin(math.radians(aim + 90)) * radar_len
-
-        # then render the line radar->(x,y)
-        pygame.draw.line(self.screen, pygame.Color("black"), radar, (x,y), 1)
+        pygame.draw.line(
+            self.screen,
+            pygame.Color("black"),
+            (
+                self.enemy_group.sprites()[0].rect.center[0],
+                self.enemy_group.sprites()[0].rect.center[1] - 9,
+            ),
+            (radar_x, radar_y),
+            1,
+        )
 
         self.enemy_group.update()
         self.laser_group.update(self.enemy_group.sprites()[0].rect.center, aim)

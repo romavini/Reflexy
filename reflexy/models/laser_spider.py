@@ -1,4 +1,5 @@
 import pygame
+import random
 from reflexy.helpers import get_image_path
 from reflexy.constants import (
     SCREEN_WIDTH,
@@ -17,12 +18,18 @@ class LaserSider(pygame.sprite.Sprite):
         self.image = self.images[self.current_image]
 
         self.rect = self.image.get_rect()
-        self.rect[0] = 0
-        self.rect[1] = 0
+        self.pos = self.rect.center
+        
+        self.eye_pos = [0, 0]
+        self.eye_pos[0] = self.rect.center[0]
+        self.eye_pos[1] = self.rect.center[1] - 9
+
+        self.rect[0] = random.randint(0, SCREEN_WIDTH - self.rect[2])
+        self.rect[1] = random.randint(0, SCREEN_HEIGHT - self.rect[3])
 
     def update(self):
-        self.rect[0] += SPIDER_SPEED
-        self.rect[1] += SPIDER_SPEED
+        self.rect[0] += 0
+        self.rect[1] += 0
 
     def get_surface(self, filename, angle=0, scale=1):
         return pygame.transform.rotozoom(

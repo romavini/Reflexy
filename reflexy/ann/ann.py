@@ -8,15 +8,28 @@ from reflexy.constants import (
 )
 
 
-class Ann(pygame.sprite.Sprite):
+class Ann():
     def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
+        pass
 
+    def activate_function(self, output_weight_layer_1):
+        output_layer_1 = []
+        for val in output_weight_layer_1:
+            output_layer_1.append(1/(1 + np.exp(-val)))
+
+        return output_layer_1
+
+    def neural(self, ang, a, b, dist):
+        input_layer = np.array([ang, a[0], a[1], b[0], b[1], dist])
+        weight_layer_1 = np.zeros((6, 6))
+
+        # output_layer_1 = self.activate_function(np.matmul(weight_layer_1, input_layer.T))
+    
     def angle_between(self, p1, p2):
         d1 = p2[0] - p1[0]
         d2 = p2[1] - p1[1]
         if d1 == 0:
-            if d2 == 0:  # same points?
+            if d2 == 0:
                 deg = 0
             else:
                 deg = 0 if p1[1] > p2[1] else 180
@@ -34,10 +47,13 @@ class Ann(pygame.sprite.Sprite):
     def update(self, player, enemy):
         a = np.array(player)
         b = np.array(enemy)
-        dist = np.linalg.norm(a - b)
+    
+        dist = np.linalg.norm(a - b) # Range of distance
+        ang = self.angle_between(a, b) # Angle to aim
 
-        ang = self.angle_between(a, b)
+        x = a[0] + math.cos(math.radians(ang + 90)) * SPIDER_VISION
+        y = a[1] + math.sin(math.radians(ang + 90)) * SPIDER_VISION
 
-        print(ang)
+        # self.neural(ang, a, b, dist)
 
-        return 0, ang
+        return 0, ang, x, y

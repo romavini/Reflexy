@@ -17,6 +17,7 @@ class Player(pygame.sprite.Sprite):
         self.image = self.images[self.current_image]
 
         self.rect = self.image.get_rect()
+        self.pos = self.rect.center
         self.rect[0] = SCREEN_WIDTH / 2
         self.rect[1] = SCREEN_HEIGHT / 2
 

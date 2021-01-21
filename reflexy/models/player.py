@@ -1,6 +1,6 @@
 import pygame
-from reflexy.helpers import get_image_path
-from reflexy.constants import (
+from helpers import get_image_path
+from constants import (
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
     PLAYER_SPEED,
@@ -11,45 +11,34 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-        self.images = [self.get_surface(filename) for filename in ("player",)]
+        self.image = self.get_surface("player-down.png")
+        self.x = SCREEN_WIDTH / 2 - 100
+        self.y = SCREEN_HEIGHT / 2 - 50
 
-        self.current_image = 0
-        self.image = self.images[self.current_image]
+        self.rect = pygame.Rect(self.x, self.y, 128, 64)
+        
+        self.mouse = pygame.mouse.get_pos()
+        self.hp = 3
 
-        self.rect = self.image.get_rect()
-        self.pos = self.rect.center
-        self.rect[0] = SCREEN_WIDTH / 2
-        self.rect[1] = SCREEN_HEIGHT / 2
-
-        # self.score = 0
-        # self.life = 3
-
-        self.direction = "down"
+        self.moveLeft = False
+        self.moveRight = False
+        self.moveUp = False
+        self.moveDown = False
 
     def update(self):
-        pass
+        if self.moveDown and self.rect.bottom < SCREEN_HEIGHT:
+            self.rect.top += PLAYER_SPEED
+        if self.moveUp and self.rect.top > 0:
+            self.rect.top -= PLAYER_SPEED
+        if self.moveLeft and self.rect.left > 0:
+            self.rect.left -= PLAYER_SPEED
+        if self.moveRight and self.rect.right < SCREEN_WIDTH:
+            self.rect.right += PLAYER_SPEED
 
-    def down(self):
-        self.rect[1] += PLAYER_SPEED
-        self.direction = "down"
 
-    def up(self):
-        self.rect[1] -= PLAYER_SPEED
-        self.direction = "up"
-
-    def left(self):
-        self.rect[0] -= PLAYER_SPEED
-        self.direction = "left"
-
-    def right(self):
-        self.rect[0] += PLAYER_SPEED
-        self.direction = "right"
-
-    def get_surface(self, filename, direction="down", angle=0, scale=1):
+    def get_surface(self, filename, angle=0, scale=1):
         return pygame.transform.rotozoom(
-            pygame.image.load(
-                get_image_path(f"{filename}-{direction}.png")
-            ).convert_alpha(),
+            pygame.image.load(get_image_path(filename)).convert_alpha(),
             angle,
             scale,
         )

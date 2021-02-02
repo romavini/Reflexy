@@ -1,10 +1,9 @@
 import pygame
 from helpers import get_image_path
-# from constants import ()
 
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, screen, x, y):
+    def __init__(self, screen, spider_coordenates, direction, aim_angle):
         pygame.sprite.Sprite.__init__(self)
 
         self.images = [
@@ -15,17 +14,26 @@ class Bullet(pygame.sprite.Sprite):
         self.current_image = 0
         self.image = self.images[self.current_image]
 
-        self.current_angle = 0
+        self.current_angle = aim_angle
 
-        self.x = x
-        self.y = y
-        self.rect = pygame.Rect(self.x, self.y, 128, 64)
+        [self.x, self.y] = spider_coordenates[0:2]
 
-        self.blitRotate(screen, self.image, self.rect.center, (0,0), self.current_angle)
+        self.rect = pygame.Rect(self.x - 41, self.y - 41, 128, 64)
 
+        self.blitRotate(
+            screen, self.image, self.rect.center, (0, 0), self.current_angle
+        )
 
-    def shot(self, screen, angle):
-        pass
+    def next_sprite(self, screen):
+        self.current_image += 1
+        if self.current_image >= len(self.images) - 1:
+            self.current_image = len(self.images) - 1
+
+        self.image = self.images[self.current_image]
+
+        self.blitRotate(
+            screen, self.image, self.rect.center, (0, 0), self.current_angle
+        )
 
     def get_surface(self, filename, angle=0, scale=1):
         return pygame.transform.rotozoom(
@@ -66,4 +74,3 @@ class Bullet(pygame.sprite.Sprite):
         screen.blit(rotated_image, origin), rotated_image
 
         return rotated_image
-

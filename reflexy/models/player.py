@@ -16,9 +16,10 @@ class Player(pygame.sprite.Sprite):
         self.y = SCREEN_HEIGHT / 2 - 50
 
         self.rect = pygame.Rect(self.x, self.y, 128, 64)
-        
+
         self.mouse = pygame.mouse.get_pos()
         self.hp = 3
+        self.score = 0
 
         self.moveLeft = False
         self.moveRight = False
@@ -34,7 +35,6 @@ class Player(pygame.sprite.Sprite):
             self.rect.left -= PLAYER_SPEED
         if self.moveRight and self.rect.right < SCREEN_WIDTH:
             self.rect.right += PLAYER_SPEED
-
 
     def get_surface(self, filename, angle=0, scale=1):
         return pygame.transform.rotozoom(

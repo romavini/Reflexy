@@ -1,6 +1,6 @@
 import pygame
-from helpers import get_image_path
-from constants import (
+from reflexy.helpers import get_image_path
+from reflexy.constants import (
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
     PLAYER_SPEED,
@@ -12,8 +12,8 @@ class Player(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
 
         self.image = self.get_surface("player-down.png")
-        self.x = SCREEN_WIDTH / 2 - 100
-        self.y = SCREEN_HEIGHT / 2 - 50
+        self.x = SCREEN_WIDTH / 2
+        self.y = SCREEN_HEIGHT / 2
 
         self.rect = pygame.Rect(self.x, self.y, 128, 64)
 

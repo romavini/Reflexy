@@ -1,4 +1,7 @@
 import pygame
+import os
+import time
+from typing import List, Tuple, Dict
 from reflexy.constants import (
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
@@ -8,11 +11,11 @@ from reflexy.constants import (
     FONT_SIZE,
     SPIDER_VISION,
     PLAYER_SPEED,
+    COOLDOWN_HIT,
 )
 from reflexy.helpers import get_image_path, create_pygame_font
 from reflexy.models.player import Player
 from reflexy.models.laser_spider import LaserSpider
-from reflexy.models.bullet import Bullet
 from reflexy.logic.brain import brain, calc_angle
 
 
@@ -36,6 +39,8 @@ class Runner:
         self.player = Player()
         self.enemy_group.add(LaserSpider())
         self.player_group.add(self.player)
+        self.player_hit = False
+        self.cd_player_hit = time.time()
 
     @staticmethod
     def create_background():
@@ -55,17 +60,31 @@ class Runner:
         )
 
     def has_hit(self):
-        bullet = self.enemy_group.sprites()[0].bullet
-
-        if not bullet:
+        if not self.enemy_group.sprites()[0].ray:
             return False
 
+        ray = self.enemy_group.sprites()[0].ray
+        self.laser_group.add(ray)
         return (
-            pygame.sprite.spritecollide(
-                bullet, self.player_group, False, pygame.sprite.collide_mask
+            pygame.sprite.groupcollide(
+                self.laser_group,
+                self.player_group,
+                False,
+                False,
+                pygame.sprite.collide_mask,
             )
-            and bullet.current_image == 3
+            and ray.current_image == 3
         )
+
+    def hp(self):
+        if (self.has_collision() or self.has_hit()) and not self.player_hit:
+            self.player.hp -= 1
+            self.player_hit = True
+            self.cd_player_hit = time.time()
+            self.player.rect = pygame.Rect(SCREEN_WIDTH / 2, SCREEN_WIDTH / 2, 128, 64)
+
+        if self.player_hit and time.time() - self.cd_player_hit > COOLDOWN_HIT:
+            self.player_hit = False
 
     def handle_keys(self, player):
         """Handles keys."""
@@ -119,34 +138,25 @@ class Runner:
     def update_frame(self):
         self.screen.blit(self.background, (0, 0))
 
-        self.laser_group.update()
-        for group in self.laser_group:
-            self.laser_group.image = group.blitRotate(
-                self.screen,
-                group.image,
-                (group.rect[0], group.rect[1]),
-                (group.rect[2] / 2, group.rect[3] / 2),
-                group.current_angle,
-            )
+        for group in [self.enemy_group, self.player_group]:
+            group.draw(self.screen)
 
         self.enemy_group.update(self.screen, self.player.rect)
         self.player_group.update()
 
-        for group in [self.enemy_group, self.player_group, self.laser_group]:
-            group.draw(self.screen)
-
         self.update_score()
 
         self.screen.blit(
-            self.create_score_text(str(self.player.score)),
+            self.create_score_text(str(self.player.hp)),
             ((SCREEN_WIDTH - (FONT_SIZE / 2)) / 2, SCREEN_HEIGHT / 8),
         )
         pygame.display.update()
 
     def run(self):
-        while not self.has_collision() and not self.has_hit():
+        while self.player.hp > 0:
             self.clock.tick(CLOCK_TICK)
             self.check_events()
             self.update_frame()
+            self.hp()
 
         pygame.quit()

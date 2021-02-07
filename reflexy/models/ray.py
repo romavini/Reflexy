@@ -10,7 +10,6 @@ class Ray(pygame.sprite.Sprite):
             self.get_surface(filename)
             for filename in (["ray-0.png", "ray-1.png", "ray-2.png", "ray-3.png"])
         ]
-
         self.current_image = 0
         self.image = self.images[self.current_image]
 

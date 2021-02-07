@@ -10,13 +10,13 @@ from reflexy.constants import (
     CLOCK_TICK,
     FONT_SIZE,
     SPIDER_VISION,
+    SPAWN_SPIDER,
     PLAYER_SPEED,
-    COOLDOWN_HIT,
+    COOLDOWN_IMMUNE,
 )
 from reflexy.helpers import get_image_path, create_pygame_font
 from reflexy.models.player import Player
 from reflexy.models.laser_spider import LaserSpider
-from reflexy.logic.brain import brain, calc_angle
 
 
 class Runner:
@@ -41,16 +41,31 @@ class Runner:
         self.player_group.add(self.player)
         self.player_hit = False
         self.cd_player_hit = time.time()
+        self.cd_spawn_spider = time.time()
 
     @staticmethod
     def create_background():
         bg = pygame.image.load(get_image_path("background-field.png"))
         return pygame.transform.scale(bg, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    def create_score_text(self, score):
-        return self.text.render(score, True, (255, 255, 255))
+    def create_text(self, text):
+        return self.text.render(text, True, (255, 255, 255))
 
     def has_collision(self):
+        if self.player.attacking:
+            [
+                self.kill_spider(sprite)
+                for sprite in self.enemy_group.sprites()
+                if pygame.sprite.spritecollide(
+                    sprite,
+                    self.player_group,
+                    False,
+                    pygame.sprite.collide_mask,
+                )
+            ]
+
+            return False
+
         return pygame.sprite.groupcollide(
             self.player_group,
             self.enemy_group,
@@ -60,7 +75,10 @@ class Runner:
         )
 
     def has_hit(self):
-        if not self.enemy_group.sprites()[0].ray:
+        if not self.enemy_group.sprites():
+            return False
+
+        if not self.player.attacking or not self.enemy_group.sprites()[0].ray:
             return False
 
         ray = self.enemy_group.sprites()[0].ray
@@ -77,14 +95,20 @@ class Runner:
         )
 
     def hp(self):
-        if (self.has_collision() or self.has_hit()) and not self.player_hit:
-            self.player.hp -= 1
-            self.player_hit = True
-            self.cd_player_hit = time.time()
-            self.player.rect = pygame.Rect(SCREEN_WIDTH / 2, SCREEN_WIDTH / 2, 128, 64)
+        if self.enemy_group.sprites():
+            if (self.has_collision() or self.has_hit()) and not self.player_hit:
+                self.player.hp -= 1
+                self.player_hit = True
+                self.cd_player_hit = time.time()
+                self.player.set_spawn()
+                self.dead = True
 
-        if self.player_hit and time.time() - self.cd_player_hit > COOLDOWN_HIT:
-            self.player_hit = False
+            if self.player_hit and time.time() - self.cd_player_hit > COOLDOWN_IMMUNE:
+                self.player_hit = False
+
+    def kill_spider(self, sprite):
+        sprite.kill()
+        self.player.score += 1
 
     def handle_keys(self, player):
         """Handles keys."""
@@ -123,6 +147,8 @@ class Runner:
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
+                if event.key == pygame.K_SPACE:
+                    self.player.attack()
                 if event.key == pygame.K_LEFT or event.key == pygame.K_a:
                     self.player.moveLeft = False
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
@@ -141,13 +167,17 @@ class Runner:
         for group in [self.enemy_group, self.player_group]:
             group.draw(self.screen)
 
-        self.enemy_group.update(self.screen, self.player.rect)
+        self.enemy_group.update(self.screen, self.player.center)
         self.player_group.update()
 
         self.update_score()
 
         self.screen.blit(
-            self.create_score_text(str(self.player.hp)),
+            self.create_text("Lifes = " + str(self.player.hp)),
+            (FONT_SIZE, SCREEN_HEIGHT / 8),
+        )
+        self.screen.blit(
+            self.create_text(str(self.player.score)),
             ((SCREEN_WIDTH - (FONT_SIZE / 2)) / 2, SCREEN_HEIGHT / 8),
         )
         pygame.display.update()

@@ -78,7 +78,7 @@ class Runner:
         if not self.enemy_group.sprites():
             return False
 
-        if not self.player.attacking or not self.enemy_group.sprites()[0].ray:
+        if self.player.attacking or not self.enemy_group.sprites()[0].ray:
             return False
 
         ray = self.enemy_group.sprites()[0].ray
@@ -106,6 +106,9 @@ class Runner:
             if self.player_hit and time.time() - self.cd_player_hit > COOLDOWN_IMMUNE:
                 self.player_hit = False
 
+    def respawn_spider(self):
+        self.enemy_group.add(LaserSpider())
+
     def kill_spider(self, sprite):
         sprite.kill()
         self.player.score += 1
@@ -126,6 +129,10 @@ class Runner:
             player.rect[0] -= PLAYER_SPEED  # move left
 
     def check_events(self):
+        if time.time() - self.cd_spawn_spider > SPAWN_SPIDER:
+            self.respawn_spider()
+            self.cd_spawn_spider = time.time()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()

@@ -1,10 +1,13 @@
 import pygame
 import math
+import random
 from reflexy.helpers import get_image_path
 from reflexy.constants import (
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
     SPIDER_SPEED,
+    SPIDER_WIDTH,
+    SPIDER_HEIGHT,
     COOLDOWN_FIRE,
     FREEZE_TIME,
 )
@@ -20,9 +23,7 @@ class LaserSpider(pygame.sprite.Sprite):
         self.current_image = 0
         self.image = self.images[self.current_image]
 
-        self.x = 50
-        self.y = 50
-        self.rect = pygame.Rect(self.x, self.y, 128, 64)
+        self.spawn_spider()
 
         self.firing = False
         self.cooldown_fire = True
@@ -71,6 +72,32 @@ class LaserSpider(pygame.sprite.Sprite):
 
     def call_ray(self, screen):
         self.ray = Ray(screen, self.rect, self.direction, self.aim_angle)
+
+    def spawn_spider(self):
+        """spawn the spider sprite in a random position"""
+        axis = random.randint(0,1)
+        side = random.randint(0,1) if axis else random.randint(0,1)
+
+        if axis:
+            if side:
+                self.y = random.randint(0,SCREEN_HEIGHT)
+                self.x = - SPIDER_WIDTH
+
+            else:
+                self.y = random.randint(0,SCREEN_HEIGHT)
+                self.x = SCREEN_WIDTH + SPIDER_WIDTH
+
+        else:
+            if side:
+                self.x = random.randint(0,SCREEN_WIDTH)
+                self.y = - SPIDER_HEIGHT
+
+            else:
+                self.x = random.randint(0,SCREEN_WIDTH)
+                self.y = SCREEN_HEIGHT + SPIDER_HEIGHT
+
+        self.rect = pygame.Rect(self.x, self.y, 128, 64)
+
 
     def get_surface(self, filename, angle=0, scale=1):
         return pygame.transform.rotozoom(

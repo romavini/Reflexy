@@ -35,11 +35,12 @@ class LaserSpider(pygame.sprite.Sprite):
         return value * 180 / math.pi
 
     def aim(self, self_coordenates, player_coordenates):
-        x = self_coordenates[0] - player_coordenates[0]
-        y = self_coordenates[1] - player_coordenates[1]
+        x_aim = int(self_coordenates[0] - player_coordenates[0])
+        y_aim = int(self_coordenates[1] - player_coordenates[1])
 
-        self.aim_angle = self.rad_to_degree(math.atan2(y, -x))
-        self.direction = (-1 if x >= 0 else 1, -1 if y >= 0 else 1)
+        self.aim_angle_rad = math.atan2(y_aim, -x_aim)
+        self.aim_angle_degree = self.rad_to_degree(self.aim_angle_rad)
+        self.direction = (-1 if x_aim >= 0 else 1, -1 if y_aim >= 0 else 1)
 
     def update(self, screen, player_coordenates):
 
@@ -60,44 +61,47 @@ class LaserSpider(pygame.sprite.Sprite):
                 self.ray = None
 
         else:
-            self.x += self.direction[0] * SPIDER_SPEED
-            self.y += self.direction[1] * SPIDER_SPEED
-            # self.x += SPIDER_SPEED * math.cos(self.aim_angle) * -1
-            # self.y += SPIDER_SPEED * math.sin(self.aim_angle)
-            self.rect = pygame.Rect(self.x, self.y, 128, 64)
-            # print(SPIDER_SPEED * math.cos(self.aim_angle) * -1, SPIDER_SPEED * math.sin(self.aim_angle), self.rect)
+            self.move_spider()
 
         if not self.firing and time.time() - self.cd_tracker > COOLDOWN_FIRE:
             self.firing = True
 
+    def move_spider(self):
+        self.x += self.direction[0] * SPIDER_SPEED
+        self.y += self.direction[1] * SPIDER_SPEED
+
+        self.x += SPIDER_SPEED * math.cos(self.aim_angle_degree) * -1
+        self.y += SPIDER_SPEED * math.sin(self.aim_angle_degree)
+
+        self.rect = pygame.Rect(self.x, self.y, SPIDER_WIDTH, SPIDER_HEIGHT)
+
     def call_ray(self, screen):
-        self.ray = Ray(screen, self.rect, self.direction, self.aim_angle)
+        self.ray = Ray(screen, self.rect, self.direction, self.aim_angle_degree)
 
     def spawn_spider(self):
         """spawn the spider sprite in a random position"""
-        axis = random.randint(0,1)
-        side = random.randint(0,1) if axis else random.randint(0,1)
+        axis = random.randint(0, 1)
+        side = random.randint(0, 1) if axis else random.randint(0, 1)
 
         if axis:
             if side:
-                self.y = random.randint(0,SCREEN_HEIGHT)
-                self.x = - SPIDER_WIDTH
+                self.y = random.randint(0, SCREEN_HEIGHT)
+                self.x = -SPIDER_WIDTH
 
             else:
-                self.y = random.randint(0,SCREEN_HEIGHT)
+                self.y = random.randint(0, SCREEN_HEIGHT)
                 self.x = SCREEN_WIDTH + SPIDER_WIDTH
 
         else:
             if side:
-                self.x = random.randint(0,SCREEN_WIDTH)
-                self.y = - SPIDER_HEIGHT
+                self.x = random.randint(0, SCREEN_WIDTH)
+                self.y = -SPIDER_HEIGHT
 
             else:
-                self.x = random.randint(0,SCREEN_WIDTH)
+                self.x = random.randint(0, SCREEN_WIDTH)
                 self.y = SCREEN_HEIGHT + SPIDER_HEIGHT
 
         self.rect = pygame.Rect(self.x, self.y, 128, 64)
-
 
     def get_surface(self, filename, angle=0, scale=1):
         return pygame.transform.rotozoom(

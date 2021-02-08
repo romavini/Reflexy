@@ -8,6 +8,7 @@ from reflexy.constants import (
     PLAYER_WIDTH,
     PLAYER_HEIGHT,
     COOLDOWN_SWORD,
+    TIME_BLINK,
 )
 
 
@@ -42,6 +43,8 @@ class Player(pygame.sprite.Sprite):
         self.cd_attack = 0
 
         self.dead = False
+        self.blinking_damage = False
+        self.count_blinking = 0
         self.attacking = False
 
         self.moveLeft = False
@@ -49,11 +52,34 @@ class Player(pygame.sprite.Sprite):
         self.moveUp = False
         self.moveDown = False
 
+    def update(self):
+        self.image = self.images[self.current_image]
+        self.move_player()
+
+        self.center = (
+            self.rect[0] + PLAYER_WIDTH / 2,
+            self.rect[1] + PLAYER_HEIGHT / 2,
+        )
+
+        if self.attacking:
+            self.attack()
+
     def set_spawn(self):
         self.x = SCREEN_WIDTH / 2
         self.y = SCREEN_HEIGHT / 2
-        self.center = (PLAYER_WIDTH / 2, PLAYER_HEIGHT / 2)
-        self.rect = pygame.Rect(self.x, self.y, self.center[0], self.center[1])
+        self.center = (self.x - PLAYER_WIDTH / 2, self.y - PLAYER_HEIGHT / 2)
+        self.rect = pygame.Rect(self.x, self.y, PLAYER_WIDTH, PLAYER_HEIGHT)
+
+    def blink_damage(self):
+        if self.count_blinking == 0:
+            self.count_blinking = time.time()
+
+        if time.time() - self.count_blinking > TIME_BLINK:
+            self.blinking_damage = not self.blinking_damage
+            self.count_blinking = time.time()
+
+            if self.blinking_damage:
+                self.image = self.get_surface("player-w-sword-damage.png")
 
     def attack(self):
         if self.attacking or time.time() - self.cd_attack > COOLDOWN_SWORD:
@@ -67,23 +93,15 @@ class Player(pygame.sprite.Sprite):
 
             self.image = self.images[self.current_image]
 
-    def update(self):
+    def move_player(self):
         if self.moveDown and self.rect.bottom < SCREEN_HEIGHT:
             self.rect.top += PLAYER_SPEED
-        if self.moveUp and self.rect.top > 0:
+        if self.moveUp and self.rect.top > -18:
             self.rect.top -= PLAYER_SPEED
-        if self.moveLeft and self.rect.left > 0:
+        if self.moveLeft and self.rect.left > -30:
             self.rect.left -= PLAYER_SPEED
         if self.moveRight and self.rect.right < SCREEN_WIDTH:
             self.rect.right += PLAYER_SPEED
-
-        self.center = (
-            self.rect[0] + PLAYER_WIDTH / 2,
-            self.rect[1] + PLAYER_HEIGHT / 2,
-        )
-
-        if self.attacking:
-            self.attack()
 
     def get_surface(self, filename, angle=0, scale=1.2):
         return pygame.transform.rotozoom(

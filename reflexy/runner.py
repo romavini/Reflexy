@@ -100,10 +100,16 @@ class Runner:
                 self.player_hit = True
                 self.cd_player_hit = time.time()
                 self.player.set_spawn()
-                self.dead = True
+                self.player.dead = True
+
+            if self.player.dead:
+                self.player.blink_damage()
 
             if self.player_hit and time.time() - self.cd_player_hit > COOLDOWN_IMMUNE:
+                self.player.dead = False
+                self.player.blinking_damage = False
                 self.player_hit = False
+                self.player.blinking_damage = 0
 
     def respawn_spider(self):
         self.enemy_group.add(LaserSpider())

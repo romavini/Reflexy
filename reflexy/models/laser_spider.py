@@ -73,7 +73,12 @@ class LaserSpider(pygame.sprite.Sprite):
         self.x += SPIDER_SPEED * math.cos(self.aim_angle_degree) * -1
         self.y += SPIDER_SPEED * math.sin(self.aim_angle_degree)
 
-        self.rect = pygame.Rect(self.x, self.y, SPIDER_WIDTH, SPIDER_HEIGHT)
+        self.rect = pygame.Rect(
+            self.x - SPIDER_WIDTH / 2,
+            self.y - SPIDER_HEIGHT / 2,
+            SPIDER_WIDTH,
+            SPIDER_HEIGHT,
+        )
 
     def call_ray(self, screen):
         self.ray = Ray(screen, self.rect, self.direction, self.aim_angle_degree)

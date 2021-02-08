@@ -30,7 +30,6 @@ class Runner:
         self.background = self.create_background()
 
         self.text = create_pygame_font(FONT_SIZE, bold=True)
-        self.current_angle = 0
 
         self.player_group = pygame.sprite.Group()
         self.enemy_group = pygame.sprite.Group()
@@ -117,16 +116,16 @@ class Runner:
         """Handles keys."""
 
         if pygame.key.get_pressed()[pygame.K_DOWN]:  # down key
-            player.rect[1] += PLAYER_SPEED  # move down
+            self.player.rect[1] += PLAYER_SPEED  # move down
 
         elif pygame.key.get_pressed()[pygame.K_UP]:  # up key
-            player.rect[1] -= PLAYER_SPEED  # move up
+            self.player.rect[1] -= PLAYER_SPEED  # move up
 
         if pygame.key.get_pressed()[pygame.K_RIGHT]:  # right key
-            player.rect[0] += PLAYER_SPEED  # move right
+            self.player.rect[0] += PLAYER_SPEED  # move right
 
         elif pygame.key.get_pressed()[pygame.K_LEFT]:  # left key
-            player.rect[0] -= PLAYER_SPEED  # move left
+            self.player.rect[0] -= PLAYER_SPEED  # move left
 
     def check_events(self):
         if time.time() - self.cd_spawn_spider > SPAWN_SPIDER:

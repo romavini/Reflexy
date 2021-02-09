@@ -39,7 +39,7 @@ class Runner:
         self.enemy_group.add(LaserSpider())
         self.player_group.add(self.player)
         self.player_hit = False
-        self.cd_player_hit = time.time()
+        self.cd_player_hit = 0
         self.cd_spawn_spider = time.time()
 
     @staticmethod
@@ -74,24 +74,21 @@ class Runner:
         )
 
     def has_hit(self):
-        if not self.enemy_group.sprites():
-            return False
+        # if self.player.attacking:
+        #     return False
 
-        if self.player.attacking or not self.enemy_group.sprites()[0].ray:
-            return False
+        for enemy in self.enemy_group.sprites():
+            if enemy.ray and enemy.ray not in self.enemy_group.sprites():
+                self.laser_group.add(enemy.ray)
 
-        ray = self.enemy_group.sprites()[0].ray
-        self.laser_group.add(ray)
-        return (
-            pygame.sprite.groupcollide(
-                self.laser_group,
-                self.player_group,
-                False,
-                False,
-                pygame.sprite.collide_mask,
-            )
-            and ray.current_image == 3
+        hit = pygame.sprite.groupcollide(
+            self.laser_group,
+            self.player_group,
+            False,
+            False,
+            pygame.sprite.collide_mask,
         )
+        return hit
 
     def hp(self):
         if self.enemy_group.sprites():
@@ -118,20 +115,8 @@ class Runner:
         sprite.kill()
         self.player.score += 1
 
-    def handle_keys(self, player):
-        """Handles keys."""
-
-        if pygame.key.get_pressed()[pygame.K_DOWN]:  # down key
-            self.player.rect[1] += PLAYER_SPEED  # move down
-
-        elif pygame.key.get_pressed()[pygame.K_UP]:  # up key
-            self.player.rect[1] -= PLAYER_SPEED  # move up
-
-        if pygame.key.get_pressed()[pygame.K_RIGHT]:  # right key
-            self.player.rect[0] += PLAYER_SPEED  # move right
-
-        elif pygame.key.get_pressed()[pygame.K_LEFT]:  # left key
-            self.player.rect[0] -= PLAYER_SPEED  # move left
+    def kill_ray(self):
+        pass
 
     def check_events(self):
         if time.time() - self.cd_spawn_spider > SPAWN_SPIDER:
@@ -143,7 +128,6 @@ class Runner:
                 pygame.quit()
 
             if event.type == pygame.KEYDOWN:
-                # Change the keyboard variables.
                 if event.key == pygame.K_LEFT or event.key == pygame.K_a:
                     self.player.moveRight = False
                     self.player.moveLeft = True
@@ -156,6 +140,7 @@ class Runner:
                 if event.key == pygame.K_DOWN or event.key == pygame.K_s:
                     self.player.moveUp = False
                     self.player.moveDown = True
+
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
@@ -171,7 +156,14 @@ class Runner:
                     self.player.moveDown = False
 
     def update_score(self):
-        pass
+        self.screen.blit(
+            self.create_text("Lifes = " + str(self.player.hp)),
+            (FONT_SIZE, SCREEN_HEIGHT / 8),
+        )
+        self.screen.blit(
+            self.create_text(str(self.player.score)),
+            ((SCREEN_WIDTH - (FONT_SIZE / 2)) / 2, SCREEN_HEIGHT / 8),
+        )
 
     def update_frame(self):
         self.screen.blit(self.background, (0, 0))
@@ -182,16 +174,8 @@ class Runner:
         self.enemy_group.update(self.screen, self.player.center)
         self.player_group.update()
 
+        self.kill_ray()
         self.update_score()
-
-        self.screen.blit(
-            self.create_text("Lifes = " + str(self.player.hp)),
-            (FONT_SIZE, SCREEN_HEIGHT / 8),
-        )
-        self.screen.blit(
-            self.create_text(str(self.player.score)),
-            ((SCREEN_WIDTH - (FONT_SIZE / 2)) / 2, SCREEN_HEIGHT / 8),
-        )
         pygame.display.update()
 
     def run(self):

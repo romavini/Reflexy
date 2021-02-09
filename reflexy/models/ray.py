@@ -3,7 +3,7 @@ from reflexy.helpers import get_image_path
 
 
 class Ray(pygame.sprite.Sprite):
-    def __init__(self, screen, spider_coordenates, direction, aim_angle):
+    def __init__(self, screen, spider_eye, aim_angle):
         pygame.sprite.Sprite.__init__(self)
 
         self.images = [
@@ -14,13 +14,15 @@ class Ray(pygame.sprite.Sprite):
         self.image = self.images[self.current_image]
 
         self.current_angle = aim_angle
+        self.spider_eye = spider_eye
 
-        [self.x, self.y] = spider_coordenates[0:2]
+        x, y = self.spider_eye
 
-        self.rect = pygame.Rect(self.x, self.y, 128, 64)
-        self.spider_eye = (self.rect[0] + 35, self.rect[1] + 11)
+        self.rect = pygame.Rect(x, y, 128, 64)
 
-        self.blitRotate(screen, self.image, self.spider_eye, (0, 0), self.current_angle)
+        self.blitRotate(
+            screen, self.image, self.spider_eye, (11, 18), self.current_angle
+        )
 
     def next_sprite(self, screen):
         self.current_image += 1
@@ -69,6 +71,6 @@ class Ray(pygame.sprite.Sprite):
         rotated_image = pygame.transform.rotate(image, angle)
 
         # rotate and blit the image
-        screen.blit(rotated_image, origin), rotated_image
+        screen.blit(rotated_image, origin)
 
         return rotated_image

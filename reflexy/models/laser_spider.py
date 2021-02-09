@@ -24,6 +24,7 @@ class LaserSpider(pygame.sprite.Sprite):
         self.image = self.images[self.current_image]
 
         self.spawn_spider()
+        self.eye = (self.rect[0] + 35, self.rect[1] + 11)
 
         self.firing = False
         self.cooldown_fire = True
@@ -31,20 +32,15 @@ class LaserSpider(pygame.sprite.Sprite):
         self.cd_init_fire = None
         self.ray = None
 
-    def rad_to_degree(self, value):
-        return value * 180 / math.pi
-
-    def aim(self, self_coordenates, player_coordenates):
-        x_aim = int(self_coordenates[0] - player_coordenates[0])
-        y_aim = int(self_coordenates[1] - player_coordenates[1])
+    def aim(self, self_eye_coordenates, player_center_coordenates):
+        x_aim = int(self_eye_coordenates[0] - player_center_coordenates[0])
+        y_aim = int(self_eye_coordenates[1] - player_center_coordenates[1])
 
         self.aim_angle_rad = math.atan2(y_aim, -x_aim)
-        self.aim_angle_degree = self.rad_to_degree(self.aim_angle_rad)
-        self.direction = (-1 if x_aim >= 0 else 1, -1 if y_aim >= 0 else 1)
 
-    def update(self, screen, player_coordenates):
-
-        self.aim((self.x, self.y), player_coordenates[0:2])
+    def update(self, screen, player_center_coordenates):
+        self.eye = (self.rect[0] + 35, self.rect[1] + 11)
+        self.aim(self.eye, player_center_coordenates)
 
         if self.firing:
             if not self.cd_init_fire:
@@ -58,6 +54,7 @@ class LaserSpider(pygame.sprite.Sprite):
                 self.firing = False
                 self.cd_tracker = time.time()
                 self.cd_init_fire = None
+                self.ray.kill()
                 self.ray = None
 
         else:
@@ -67,21 +64,15 @@ class LaserSpider(pygame.sprite.Sprite):
             self.firing = True
 
     def move_spider(self):
-        self.x += self.direction[0] * SPIDER_SPEED
-        self.y += self.direction[1] * SPIDER_SPEED
-
-        self.x += SPIDER_SPEED * math.cos(self.aim_angle_degree) * -1
-        self.y += SPIDER_SPEED * math.sin(self.aim_angle_degree)
-
-        self.rect = pygame.Rect(
-            self.x - SPIDER_WIDTH / 2,
-            self.y - SPIDER_HEIGHT / 2,
-            SPIDER_WIDTH,
-            SPIDER_HEIGHT,
-        )
+        self.rect[0] += SPIDER_SPEED * math.cos(self.aim_angle_rad)
+        self.rect[1] -= SPIDER_SPEED * math.sin(self.aim_angle_rad)
+        pass
 
     def call_ray(self, screen):
-        self.ray = Ray(screen, self.rect, self.direction, self.aim_angle_degree)
+        self.ray = Ray(screen, self.eye, math.degrees(self.aim_angle_rad))
+
+    def kill_ray(self):
+        pass
 
     def spawn_spider(self):
         """spawn the spider sprite in a random position"""
@@ -90,23 +81,23 @@ class LaserSpider(pygame.sprite.Sprite):
 
         if axis:
             if side:
-                self.y = random.randint(0, SCREEN_HEIGHT)
-                self.x = -SPIDER_WIDTH
+                y = random.randint(0, SCREEN_HEIGHT)
+                x = -SPIDER_WIDTH
 
             else:
-                self.y = random.randint(0, SCREEN_HEIGHT)
-                self.x = SCREEN_WIDTH + SPIDER_WIDTH
+                y = random.randint(0, SCREEN_HEIGHT)
+                x = SCREEN_WIDTH
 
         else:
             if side:
-                self.x = random.randint(0, SCREEN_WIDTH)
-                self.y = -SPIDER_HEIGHT
+                x = random.randint(0, SCREEN_WIDTH)
+                y = -SPIDER_HEIGHT
 
             else:
-                self.x = random.randint(0, SCREEN_WIDTH)
-                self.y = SCREEN_HEIGHT + SPIDER_HEIGHT
+                x = random.randint(0, SCREEN_WIDTH)
+                y = SCREEN_HEIGHT
 
-        self.rect = pygame.Rect(self.x, self.y, 128, 64)
+        self.rect = pygame.Rect(x, y, 128, 64)
 
     def get_surface(self, filename, angle=0, scale=1):
         return pygame.transform.rotozoom(

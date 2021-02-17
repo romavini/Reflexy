@@ -1,5 +1,6 @@
 import pygame
 import os
+import sys
 import time
 from typing import List, Tuple, Dict
 from reflexy.constants import (
@@ -32,7 +33,7 @@ class Runner:
 
         self.text = create_pygame_font(FONT_SIZE, bold=True)
 
-        self.allow_restart = False
+        self.allow_restart = True
 
         self.player_group = pygame.sprite.Group()
         self.enemy_group = pygame.sprite.Group()
@@ -129,6 +130,7 @@ class Runner:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+                sys.exit()
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_a:
@@ -147,6 +149,7 @@ class Runner:
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
+                    sys.exit()
                 if event.key == pygame.K_SPACE:
                     self.player.attack()
                 if event.key == pygame.K_LEFT or event.key == pygame.K_a:
@@ -185,6 +188,7 @@ class Runner:
     def restart(self):
         if not self.allow_restart:
             pygame.quit()
+            sys.exit()
 
         restart_game = False
 

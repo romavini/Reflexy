@@ -1,39 +1,103 @@
 import pygame
+import math
 from reflexy.helpers import get_image_path
+from reflexy.constants import (
+    RAY_WIDTH,
+    RAY_HEIGHT,
+    RAY_ORIGIN_X,
+)
 
 
 class Ray(pygame.sprite.Sprite):
-    def __init__(self, screen, spider_eye, aim_angle):
+    def __init__(self, screen, correct_spider_eye, aim_angle, eye_position):
         pygame.sprite.Sprite.__init__(self)
 
+        self.current_angle = aim_angle
+        self.correct_spider_eye = correct_spider_eye
+        self.eye_position = eye_position
+
         self.images = [
-            self.get_surface(filename)
+            self.get_surface(filename, self.current_angle)
             for filename in (["ray-0.png", "ray-1.png", "ray-2.png", "ray-3.png"])
         ]
         self.current_image = 0
         self.image = self.images[self.current_image]
 
-        self.current_angle = aim_angle
-        self.spider_eye = spider_eye
+        self.correct_ray_to_eye()
 
-        x, y = self.spider_eye
+    def correct_ray_to_eye(self):
+        size_ray_ratated = pygame.Surface.get_size(self.image)
+        B = abs(math.sin(math.radians(-self.current_angle))) * RAY_HEIGHT
+        h = math.sqrt((RAY_HEIGHT) ** 2 - (B) ** 2) / 2
 
-        self.rect = pygame.Rect(x, y, 128, 64)
+        if self.current_angle >= 90:
+            x = int(
+                self.correct_spider_eye[0]
+                - size_ray_ratated[0]
+                + B / 2
+                - math.cos(math.radians(self.current_angle)) * RAY_ORIGIN_X
+                + self.eye_position[0]
+            )
+            y = int(
+                self.correct_spider_eye[1]
+                - size_ray_ratated[1]
+                + h
+                + math.sin(math.radians(self.current_angle)) * RAY_ORIGIN_X
+                + self.eye_position[1]
+            )
 
-        self.blitRotate(
-            screen, self.image, self.spider_eye, (11, 18), self.current_angle
-        )
+        elif self.current_angle > 0:
+            x = int(
+                self.correct_spider_eye[0]
+                - B / 2
+                - math.cos(math.radians(self.current_angle)) * RAY_ORIGIN_X
+                + self.eye_position[0]
+            )
+            y = int(
+                self.correct_spider_eye[1]
+                - size_ray_ratated[1]
+                + h
+                + math.sin(math.radians(self.current_angle)) * RAY_ORIGIN_X
+                + self.eye_position[1]
+            )
+
+        elif self.current_angle <= -90:
+            x = int(
+                self.correct_spider_eye[0]
+                - size_ray_ratated[0]
+                + B / 2
+                - math.cos(math.radians(self.current_angle)) * RAY_ORIGIN_X
+                + self.eye_position[0]
+            )
+            y = int(
+                self.correct_spider_eye[1]
+                - h
+                - math.sin(math.radians(-self.current_angle)) * RAY_ORIGIN_X
+                + self.eye_position[1]
+            )
+
+        else:
+            x = int(
+                self.correct_spider_eye[0]
+                - B / 2
+                - math.cos(math.radians(self.current_angle)) * RAY_ORIGIN_X
+                + self.eye_position[0]
+            )
+            y = int(
+                self.correct_spider_eye[1]
+                - h
+                - math.sin(math.radians(-self.current_angle)) * RAY_ORIGIN_X
+                + self.eye_position[1]
+            )
+
+        self.rect = pygame.Rect(x, y, RAY_WIDTH, RAY_HEIGHT)
 
     def next_sprite(self, screen):
-        self.current_image += 1
+        self.current_image += 0.2
         if self.current_image >= len(self.images) - 1:
             self.current_image = len(self.images) - 1
 
-        self.image = self.images[self.current_image]
-
-        self.blitRotate(
-            screen, self.image, self.spider_eye, (11, 18), self.current_angle
-        )
+        self.image = self.images[int(self.current_image)]
 
     def get_surface(self, filename, angle=0, scale=1):
         return pygame.transform.rotozoom(
@@ -41,36 +105,3 @@ class Ray(pygame.sprite.Sprite):
             angle,
             scale,
         )
-
-    def blitRotate(self, screen, image, pos, originPos, angle):
-        # calcaulate the axis aligned bounding box of the rotated image
-        w, h = image.get_size()
-        box = [pygame.math.Vector2(p) for p in [(0, 0), (w, 0), (w, -h), (0, -h)]]
-        box_rotate = [p.rotate(angle) for p in box]
-        min_box = (
-            min(box_rotate, key=lambda p: p[0])[0],
-            min(box_rotate, key=lambda p: p[1])[1],
-        )
-        max_box = (
-            max(box_rotate, key=lambda p: p[0])[0],
-            max(box_rotate, key=lambda p: p[1])[1],
-        )
-
-        # calculate the translation of the pivot
-        pivot = pygame.math.Vector2(originPos[0], -originPos[1])
-        pivot_rotate = pivot.rotate(angle)
-        pivot_move = pivot_rotate - pivot
-
-        # calculate the upper left origin of the rotated image
-        origin = (
-            pos[0] - originPos[0] + min_box[0] - pivot_move[0],
-            pos[1] - originPos[1] - max_box[1] + pivot_move[1],
-        )
-
-        # get a rotated image
-        rotated_image = pygame.transform.rotate(image, angle)
-
-        # rotate and blit the image
-        screen.blit(rotated_image, origin)
-
-        return rotated_image

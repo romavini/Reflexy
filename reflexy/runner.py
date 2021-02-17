@@ -37,7 +37,8 @@ class Runner:
 
         self.player_group = pygame.sprite.Group()
         self.enemy_group = pygame.sprite.Group()
-        self.laser_group = pygame.sprite.Group()
+        self.laser_draw_group = pygame.sprite.Group()
+        self.laser_hit_group = pygame.sprite.Group()
 
         self.player = Player()
         self.enemy_group.add(LaserSpider())
@@ -78,15 +79,19 @@ class Runner:
         )
 
     def has_hit(self):
-        # if self.player.attacking:
-        #     return False
-
         for enemy in self.enemy_group.sprites():
-            if enemy.ray and enemy.ray not in self.enemy_group.sprites():
-                self.laser_group.add(enemy.ray)
+            if enemy.ray:
+                if enemy.ray not in self.enemy_group.sprites():
+                    self.laser_draw_group.add(enemy.ray)
+
+                if (
+                    enemy.ray not in self.enemy_group.sprites()
+                    and enemy.ray.current_image == 3
+                ):
+                    self.laser_hit_group.add(enemy.ray)
 
         hit = pygame.sprite.groupcollide(
-            self.laser_group,
+            self.laser_hit_group,
             self.player_group,
             False,
             False,
@@ -116,11 +121,12 @@ class Runner:
         self.enemy_group.add(LaserSpider())
 
     def kill_spider(self, sprite):
+        if sprite.ray:
+            sprite.ray.kill()
+            sprite.ray
+
         sprite.kill()
         self.player.score += 1
-
-    def kill_ray(self):
-        pass
 
     def check_events(self):
         if time.time() - self.cd_spawn_spider > SPAWN_SPIDER:
@@ -174,16 +180,14 @@ class Runner:
     def update_frame(self):
         self.screen.blit(self.background, (0, 0))
 
-        for group in [self.enemy_group, self.player_group]:
+        for group in [self.enemy_group, self.player_group, self.laser_draw_group]:
             group.draw(self.screen)
 
         self.enemy_group.update(self.screen, self.player.center)
         self.player_group.update()
 
-        self.kill_ray()
         self.update_score()
         pygame.display.update()
-
 
     def restart(self):
         if not self.allow_restart:
@@ -192,10 +196,10 @@ class Runner:
 
         restart_game = False
 
-        self.screen.fill((0,0,0))
-        text = self.create_text('You Died! Press R to restart')
+        self.screen.fill((0, 0, 0))
+        text = self.create_text("You Died! Press R to restart")
         textRect = text.get_rect()
-        textRect.center = (SCREEN_WIDTH//2, SCREEN_HEIGHT//2)
+        textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
         while not restart_game:
             self.clock.tick(CLOCK_TICK)
@@ -203,15 +207,20 @@ class Runner:
             self.screen.blit(text, textRect)
 
             for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_r:
                         restart_game = True
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
 
             pygame.display.update()
 
         start()
-
-
 
     def run(self):
         while self.player.hp > 0:

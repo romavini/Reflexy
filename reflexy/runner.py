@@ -17,6 +17,7 @@ from reflexy.constants import (
 from reflexy.helpers import get_image_path, create_pygame_font
 from reflexy.models.player import Player
 from reflexy.models.laser_spider import LaserSpider
+from reflexy.main import start
 
 
 class Runner:
@@ -30,6 +31,8 @@ class Runner:
         self.background = self.create_background()
 
         self.text = create_pygame_font(FONT_SIZE, bold=True)
+
+        self.allow_restart = False
 
         self.player_group = pygame.sprite.Group()
         self.enemy_group = pygame.sprite.Group()
@@ -178,21 +181,23 @@ class Runner:
         self.update_score()
         pygame.display.update()
 
-    
+
     def restart(self):
-        restart_game = False  
+        if not self.allow_restart:
+            pygame.quit()
+
+        restart_game = False
 
         self.screen.fill((0,0,0))
         text = self.create_text('You Died! Press R to restart')
         textRect = text.get_rect()
         textRect.center = (SCREEN_WIDTH//2, SCREEN_HEIGHT//2)
-        
+
         while not restart_game:
-        
             self.clock.tick(CLOCK_TICK)
             self.screen.blit(self.background, (0, 0))
             self.screen.blit(text, textRect)
-            
+
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_r:
@@ -200,7 +205,7 @@ class Runner:
 
             pygame.display.update()
 
-        self.__init__()
+        start()
 
 
 
@@ -211,4 +216,4 @@ class Runner:
             self.update_frame()
             self.hp()
 
-        self.restart
+        self.restart()

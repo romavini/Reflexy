@@ -1,5 +1,6 @@
 import pygame
 import math
+import time
 import random
 from reflexy.helpers import get_image_path
 from reflexy.constants import (
@@ -8,11 +9,12 @@ from reflexy.constants import (
     SPIDER_SPEED,
     SPIDER_WIDTH,
     SPIDER_HEIGHT,
+    SPIDER_EYE_X,
+    SPIDER_EYE_Y,
     COOLDOWN_FIRE,
     FREEZE_TIME,
 )
 from reflexy.models.ray import Ray
-import time
 
 
 class LaserSpider(pygame.sprite.Sprite):
@@ -24,7 +26,7 @@ class LaserSpider(pygame.sprite.Sprite):
         self.image = self.images[self.current_image]
 
         self.spawn_spider()
-        self.eye = (self.rect[0] + 35, self.rect[1] + 11)
+        self.eye_aim = (self.rect[0], self.rect[1])
 
         self.firing = False
         self.cooldown_fire = True
@@ -32,15 +34,15 @@ class LaserSpider(pygame.sprite.Sprite):
         self.cd_init_fire = None
         self.ray = None
 
-    def aim(self, self_eye_coordenates, player_center_coordenates):
-        x_aim = int(self_eye_coordenates[0] - player_center_coordenates[0])
-        y_aim = int(self_eye_coordenates[1] - player_center_coordenates[1])
-
+    def aim(self, player_center_coordenates):
+        x_aim = int(self.eye_aim[0] + SPIDER_EYE_X - player_center_coordenates[0])
+        y_aim = int(self.eye_aim[1] + SPIDER_EYE_Y - player_center_coordenates[1])
         self.aim_angle_rad = math.atan2(y_aim, -x_aim)
 
     def update(self, screen, player_center_coordenates):
-        self.eye = (self.rect[0] + 35, self.rect[1] + 11)
-        self.aim(self.eye, player_center_coordenates)
+        self.eye_aim = (self.rect[0], self.rect[1])
+
+        self.aim(player_center_coordenates)
 
         if self.firing:
             if not self.cd_init_fire:
@@ -69,10 +71,12 @@ class LaserSpider(pygame.sprite.Sprite):
         pass
 
     def call_ray(self, screen):
-        self.ray = Ray(screen, self.eye, math.degrees(self.aim_angle_rad))
-
-    def kill_ray(self):
-        pass
+        self.ray = Ray(
+            screen,
+            self.eye_aim,
+            math.degrees(self.aim_angle_rad),
+            (SPIDER_EYE_X, SPIDER_EYE_Y),
+        )
 
     def spawn_spider(self):
         """spawn the spider sprite in a random position"""

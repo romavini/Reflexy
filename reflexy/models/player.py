@@ -1,5 +1,4 @@
 import pygame
-import time
 from reflexy.helpers import get_image_path
 from reflexy.constants import (
     SCREEN_WIDTH,
@@ -13,8 +12,10 @@ from reflexy.constants import (
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, time):
         pygame.sprite.Sprite.__init__(self)
+
+        self.time = time
 
         self.images = [
             self.get_surface(filename)
@@ -52,7 +53,8 @@ class Player(pygame.sprite.Sprite):
         self.moveUp = False
         self.moveDown = False
 
-    def update(self):
+    def update(self, time):
+        self.time = time
         self.image = self.images[self.current_image]
         self.move_player()
 
@@ -72,24 +74,24 @@ class Player(pygame.sprite.Sprite):
 
     def blink_damage(self):
         if self.count_blinking == 0:
-            self.count_blinking = time.time()
+            self.count_blinking = self.time
 
-        if time.time() - self.count_blinking > TIME_BLINK:
+        if self.time - self.count_blinking > TIME_BLINK:
             self.blinking_damage = not self.blinking_damage
-            self.count_blinking = time.time()
+            self.count_blinking = self.time
 
             if self.blinking_damage:
                 self.image = self.get_surface("player-w-sword-damage.png")
 
     def attack(self):
-        if self.attacking or time.time() - self.cd_attack > COOLDOWN_SWORD:
+        if self.attacking or self.time - self.cd_attack > COOLDOWN_SWORD:
             self.attacking = True
             self.current_image += 1
 
             if self.current_image > len(self.images) - 1:
                 self.current_image = 0
                 self.attacking = False
-                self.cd_attack = time.time()
+                self.cd_attack = self.time
 
             self.image = self.images[self.current_image]
 

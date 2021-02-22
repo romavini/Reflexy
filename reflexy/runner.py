@@ -8,7 +8,8 @@ from reflexy.constants import (
     SCREEN_HEIGHT,
     CAPTION,
     GAME_SPEED,
-    CLOCK_TICK,
+    CLOCK_TICK_GAME_SPEED,
+    CLOCK_TICK_REFERENCE,
     FONT_SIZE,
     SPIDER_VISION,
     SPAWN_SPIDER,
@@ -31,6 +32,10 @@ class Runner:
         self.clock = pygame.time.Clock()
         self.background = self.create_background()
 
+        self.time = time.time()
+        self.last_time = self.time
+        self.time_game()
+
         self.text = create_pygame_font(FONT_SIZE, bold=True)
 
         self.allow_restart = True
@@ -39,18 +44,23 @@ class Runner:
         self.enemy_group = pygame.sprite.Group()
         self.laser_draw_group = pygame.sprite.Group()
         self.laser_hit_group = pygame.sprite.Group()
+        self.effect_group = pygame.sprite.Group()
 
-        self.player = Player()
-        self.enemy_group.add(LaserSpider())
+        self.player = Player(self.time)
+        self.enemy_group.add(LaserSpider(self.time))
         self.player_group.add(self.player)
         self.player_hit = False
         self.cd_player_hit = 0
-        self.cd_spawn_spider = time.time()
+        self.cd_spawn_spider = self.time
 
     @staticmethod
     def create_background():
         bg = pygame.image.load(get_image_path("background-field.png"))
         return pygame.transform.scale(bg, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+    def time_game(self):
+        self.time = self.time + (time.time() - self.last_time) * CLOCK_TICK_GAME_SPEED / CLOCK_TICK_REFERENCE
+        self.last_time = time.time()
 
     def create_text(self, text):
         return self.text.render(text, True, (255, 255, 255))
@@ -104,21 +114,21 @@ class Runner:
             if (self.has_collision() or self.has_hit()) and not self.player_hit:
                 self.player.hp -= 1
                 self.player_hit = True
-                self.cd_player_hit = time.time()
+                self.cd_player_hit = self.time
                 self.player.set_spawn()
                 self.player.dead = True
 
             if self.player.dead:
                 self.player.blink_damage()
 
-            if self.player_hit and time.time() - self.cd_player_hit > COOLDOWN_IMMUNE:
+            if self.player_hit and self.time - self.cd_player_hit > COOLDOWN_IMMUNE:
                 self.player.dead = False
                 self.player.blinking_damage = False
                 self.player_hit = False
                 self.player.blinking_damage = 0
 
     def respawn_spider(self):
-        self.enemy_group.add(LaserSpider())
+        self.enemy_group.add(LaserSpider(self.time))
 
     def kill_spider(self, sprite):
         if sprite.ray:
@@ -129,9 +139,9 @@ class Runner:
         self.player.score += 1
 
     def check_events(self):
-        if time.time() - self.cd_spawn_spider > SPAWN_SPIDER:
+        if self.time - self.cd_spawn_spider > SPAWN_SPIDER:
             self.respawn_spider()
-            self.cd_spawn_spider = time.time()
+            self.cd_spawn_spider = self.time
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -179,12 +189,13 @@ class Runner:
 
     def update_frame(self):
         self.screen.blit(self.background, (0, 0))
+        self.time_game()
 
         for group in [self.enemy_group, self.player_group, self.laser_draw_group]:
             group.draw(self.screen)
 
-        self.enemy_group.update(self.screen, self.player.center)
-        self.player_group.update()
+        self.enemy_group.update(self.screen, self.player.center, self.time)
+        self.player_group.update(self.time)
 
         self.update_score()
         pygame.display.update()
@@ -202,7 +213,7 @@ class Runner:
         textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
         while not restart_game:
-            self.clock.tick(CLOCK_TICK)
+            self.clock.tick(CLOCK_TICK_GAME_SPEED)
             self.screen.blit(self.background, (0, 0))
             self.screen.blit(text, textRect)
 
@@ -224,7 +235,7 @@ class Runner:
 
     def run(self):
         while self.player.hp > 0:
-            self.clock.tick(CLOCK_TICK)
+            self.clock.tick(CLOCK_TICK_GAME_SPEED)
             self.check_events()
             self.update_frame()
             self.hp()

@@ -1,6 +1,5 @@
 import pygame
 import math
-import time
 import random
 from reflexy.helpers import get_image_path
 from reflexy.constants import (
@@ -18,8 +17,10 @@ from reflexy.models.ray import Ray
 
 
 class LaserSpider(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, time):
         pygame.sprite.Sprite.__init__(self)
+
+        self.time = time
 
         self.images = [self.get_surface(filename) for filename in ("laser-spider.png",)]
         self.current_image = 0
@@ -30,7 +31,7 @@ class LaserSpider(pygame.sprite.Sprite):
 
         self.firing = False
         self.cooldown_fire = True
-        self.cd_tracker = time.time()
+        self.cd_tracker = self.time
         self.cd_init_fire = None
         self.ray = None
 
@@ -39,7 +40,9 @@ class LaserSpider(pygame.sprite.Sprite):
         y_aim = int(self.eye_aim[1] + SPIDER_EYE_Y - player_center_coordenates[1])
         self.aim_angle_rad = math.atan2(y_aim, -x_aim)
 
-    def update(self, screen, player_center_coordenates):
+    def update(self, screen, player_center_coordenates, time):
+        self.time = time
+
         self.eye_aim = (self.rect[0], self.rect[1])
 
         self.aim(player_center_coordenates)
@@ -47,14 +50,14 @@ class LaserSpider(pygame.sprite.Sprite):
         if self.firing:
             if not self.cd_init_fire:
                 self.call_ray(screen)
-                self.cd_init_fire = time.time()
+                self.cd_init_fire = self.time
 
-            elif time.time() - self.cd_init_fire < FREEZE_TIME:
+            elif self.time - self.cd_init_fire < FREEZE_TIME:
                 self.ray.next_sprite(screen)
 
             else:
                 self.firing = False
-                self.cd_tracker = time.time()
+                self.cd_tracker = self.time
                 self.cd_init_fire = None
                 self.ray.kill()
                 self.ray = None
@@ -62,13 +65,12 @@ class LaserSpider(pygame.sprite.Sprite):
         else:
             self.move_spider()
 
-        if not self.firing and time.time() - self.cd_tracker > COOLDOWN_FIRE:
+        if not self.firing and self.time - self.cd_tracker > COOLDOWN_FIRE:
             self.firing = True
 
     def move_spider(self):
-        self.rect[0] += SPIDER_SPEED * math.cos(self.aim_angle_rad)
-        self.rect[1] -= SPIDER_SPEED * math.sin(self.aim_angle_rad)
-        pass
+        self.rect[0] += round(math.cos(self.aim_angle_rad) * SPIDER_SPEED)
+        self.rect[1] -= round(math.sin(self.aim_angle_rad) * SPIDER_SPEED)
 
     def call_ray(self, screen):
         self.ray = Ray(

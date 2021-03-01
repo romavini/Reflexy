@@ -12,6 +12,7 @@ from reflexy.constants import (
     SPIDER_EYE_Y,
     COOLDOWN_FIRE,
     FREEZE_TIME,
+    ACCELERATION,
 )
 from reflexy.models.ray import Ray
 
@@ -34,6 +35,7 @@ class LaserSpider(pygame.sprite.Sprite):
         self.cd_tracker = self.time
         self.cd_init_fire = None
         self.ray = None
+        self.speed = 0
 
     def aim(self, player_center_coordenates):
         x_aim = int(self.eye_aim[0] + SPIDER_EYE_X - player_center_coordenates[0])
@@ -45,9 +47,12 @@ class LaserSpider(pygame.sprite.Sprite):
 
         self.eye_aim = (self.rect[0], self.rect[1])
 
+        self.acceleration()
         self.aim(player_center_coordenates)
 
         if self.firing:
+            self.speed = 0
+
             if not self.cd_init_fire:
                 self.call_ray(screen)
                 self.cd_init_fire = self.time
@@ -68,9 +73,16 @@ class LaserSpider(pygame.sprite.Sprite):
         if not self.firing and self.time - self.cd_tracker > COOLDOWN_FIRE:
             self.firing = True
 
+    def acceleration(self):
+        if self.speed <= SPIDER_SPEED:
+            self.speed += self.speed + SPIDER_SPEED * ACCELERATION
+
+        if self.speed > SPIDER_SPEED:
+            self.speed = SPIDER_SPEED
+
     def move_spider(self):
-        self.rect[0] += round(math.cos(self.aim_angle_rad) * SPIDER_SPEED)
-        self.rect[1] -= round(math.sin(self.aim_angle_rad) * SPIDER_SPEED)
+        self.rect[0] += round(math.cos(self.aim_angle_rad) * self.speed)
+        self.rect[1] -= round(math.sin(self.aim_angle_rad) * self.speed)
 
     def call_ray(self, screen):
         self.ray = Ray(

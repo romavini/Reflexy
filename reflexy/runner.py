@@ -59,7 +59,12 @@ class Runner:
         return pygame.transform.scale(bg, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
     def time_game(self):
-        self.time = self.time + (time.time() - self.last_time) * CLOCK_TICK_GAME_SPEED / CLOCK_TICK_REFERENCE
+        self.time = (
+            self.time
+            + (time.time() - self.last_time)
+            * CLOCK_TICK_GAME_SPEED
+            / CLOCK_TICK_REFERENCE
+        )
         self.last_time = time.time()
 
     def create_text(self, text):
@@ -80,6 +85,17 @@ class Runner:
 
             return False
 
+        [
+            self.kill_spider(sprite)
+            for sprite in self.enemy_group.sprites()
+            if pygame.sprite.spritecollide(
+                sprite,
+                self.laser_hit_group,
+                False,
+                pygame.sprite.collide_mask,
+            ) and not sprite.ray
+        ]
+
         return pygame.sprite.groupcollide(
             self.player_group,
             self.enemy_group,
@@ -96,7 +112,10 @@ class Runner:
 
                 if (
                     enemy.ray not in self.enemy_group.sprites()
-                    and enemy.ray.current_image == 3
+                    and (
+                        enemy.ray.current_image == 5
+                        or enemy.ray.current_image == 6
+                    )
                 ):
                     self.laser_hit_group.add(enemy.ray)
 

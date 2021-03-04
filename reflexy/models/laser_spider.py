@@ -1,7 +1,10 @@
 import pygame
 import math
 import random
-from reflexy.helpers import get_image_path
+from reflexy.helpers import (
+    get_image_path,
+    calc_acceleration,
+)
 from reflexy.constants import (
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
@@ -10,9 +13,12 @@ from reflexy.constants import (
     SPIDER_HEIGHT,
     SPIDER_EYE_X,
     SPIDER_EYE_Y,
-    COOLDOWN_FIRE,
-    FREEZE_TIME,
-    ACCELERATION,
+    COOLDOWN_SPIDER_FIRE,
+    FREEZE_SPIDER_TIME,
+    SPIDER_ACCELERATION,
+    SPIDER_ACCELERATION_FUNC,
+    SPIDER_DECELERATION,
+    SPIDER_DECELERATION_FUNC,
 )
 from reflexy.models.ray import Ray
 
@@ -31,11 +37,14 @@ class LaserSpider(pygame.sprite.Sprite):
         self.eye_aim = (self.rect[0], self.rect[1])
 
         self.firing = False
-        self.cooldown_fire = True
+        self.cooldown_SPIDER_fire = True
         self.cd_tracker = self.time
         self.cd_init_fire = None
         self.ray = None
         self.speed = 0
+        self.acc_tracker = None
+
+        self.state_of_moviment = "accelerating"
 
     def aim(self, player_center_coordenates):
         x_aim = int(self.eye_aim[0] + SPIDER_EYE_X - player_center_coordenates[0])
@@ -47,17 +56,18 @@ class LaserSpider(pygame.sprite.Sprite):
 
         self.eye_aim = (self.rect[0], self.rect[1])
 
-        self.acceleration()
+        self.set_velocity()
         self.aim(player_center_coordenates)
 
         if self.firing:
-            self.speed = 0
+            if self.state_of_moviment in ["keep", "accelerating"]:
+                self.state_of_moviment = "decelerating"
 
             if not self.cd_init_fire:
                 self.call_ray(screen)
                 self.cd_init_fire = self.time
 
-            elif self.time - self.cd_init_fire < FREEZE_TIME:
+            elif self.time - self.cd_init_fire < FREEZE_SPIDER_TIME:
                 self.ray.next_sprite(screen)
 
             else:
@@ -66,19 +76,53 @@ class LaserSpider(pygame.sprite.Sprite):
                 self.cd_init_fire = None
                 self.ray.kill()
                 self.ray = None
-
         else:
-            self.move_spider()
+            if self.state_of_moviment in ["stoped", "decelerating"]:
+                self.state_of_moviment = "accelerating"
 
-        if not self.firing and self.time - self.cd_tracker > COOLDOWN_FIRE:
+        self.move_spider()
+
+        if not self.firing and self.time - self.cd_tracker > COOLDOWN_SPIDER_FIRE:
             self.firing = True
 
-    def acceleration(self):
-        if self.speed <= SPIDER_SPEED:
-            self.speed += self.speed + SPIDER_SPEED * ACCELERATION
+    def set_velocity(self):
+        if self.state_of_moviment == "accelerating" and self.speed < SPIDER_SPEED:
+            if not self.acc_tracker:
+                self.acc_tracker = self.time
 
-        if self.speed > SPIDER_SPEED:
+            self.speed = (
+                calc_acceleration(
+                    SPIDER_ACCELERATION_FUNC,
+                    self.time,
+                    self.acc_tracker,
+                    SPIDER_ACCELERATION,
+                )
+                * SPIDER_SPEED
+            )
+
+        if self.speed > SPIDER_SPEED or self.state_of_moviment == "keep":
             self.speed = SPIDER_SPEED
+            self.state_of_moviment = "keep"
+            self.acc_tracker = None
+
+        elif self.state_of_moviment == "decelerating":
+            if not self.acc_tracker:
+                self.acc_tracker = self.time
+
+            self.speed = (
+                1
+                - calc_acceleration(
+                    SPIDER_DECELERATION_FUNC,
+                    self.time,
+                    self.acc_tracker,
+                    SPIDER_DECELERATION,
+                )
+            ) * SPIDER_SPEED
+
+        if self.speed < 0 and self.state_of_moviment == "decelerating":
+            self.state_of_moviment = "stoped"
+            self.speed = 0
+            self.acc_tracker = None
 
     def move_spider(self):
         self.rect[0] += round(math.cos(self.aim_angle_rad) * self.speed)

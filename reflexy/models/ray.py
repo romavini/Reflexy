@@ -18,15 +18,18 @@ class Ray(pygame.sprite.Sprite):
 
         self.images = [
             self.get_surface(filename, self.current_angle)
-            for filename in ([
-                "ray-0.png",
-                "ray-1.png",
-                "ray-2.png",
-                "ray-3.png",
-                "ray-4.png",
-                "ray-5.png",
-                "ray-6.png",
-            ])
+            for filename in (
+                [
+                    "ray-0.png",
+                    "ray-1.png",
+                    "ray-2.png",
+                    "ray-3.png",
+                    "ray-4.png",
+                    "ray-5.png",
+                    "ray-6.png",
+                    "ray-7.png",
+                ]
+            )
         ]
         self.current_image = 0
         self.image = self.images[self.current_image]
@@ -101,7 +104,7 @@ class Ray(pygame.sprite.Sprite):
         self.rect = pygame.Rect(x, y, RAY_WIDTH, RAY_HEIGHT)
 
     def next_sprite(self, screen):
-        self.current_image += 0.4
+        self.current_image += 0.3
         if self.current_image >= len(self.images) - 1:
             self.current_image = len(self.images) - 1
 

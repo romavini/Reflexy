@@ -14,7 +14,7 @@ from reflexy.constants import (
     SPIDER_VISION,
     SPAWN_SPIDER,
     PLAYER_SPEED,
-    COOLDOWN_IMMUNE,
+    COOLDOWN_PLAYER_IMMUNE,
 )
 from reflexy.helpers import get_image_path, create_pygame_font
 from reflexy.models.player import Player
@@ -93,7 +93,8 @@ class Runner:
                 self.laser_hit_group,
                 False,
                 pygame.sprite.collide_mask,
-            ) and not sprite.ray
+            )
+            and not sprite.ray
         ]
 
         return pygame.sprite.groupcollide(
@@ -110,12 +111,8 @@ class Runner:
                 if enemy.ray not in self.enemy_group.sprites():
                     self.laser_draw_group.add(enemy.ray)
 
-                if (
-                    enemy.ray not in self.enemy_group.sprites()
-                    and (
-                        enemy.ray.current_image == 5
-                        or enemy.ray.current_image == 6
-                    )
+                if enemy.ray not in self.enemy_group.sprites() and (
+                    int(enemy.ray.current_image) in [5, 6, 7]
                 ):
                     self.laser_hit_group.add(enemy.ray)
 
@@ -140,7 +137,10 @@ class Runner:
             if self.player.dead:
                 self.player.blink_damage()
 
-            if self.player_hit and self.time - self.cd_player_hit > COOLDOWN_IMMUNE:
+            if (
+                self.player_hit
+                and self.time - self.cd_player_hit > COOLDOWN_PLAYER_IMMUNE
+            ):
                 self.player.dead = False
                 self.player.blinking_damage = False
                 self.player_hit = False
@@ -168,33 +168,17 @@ class Runner:
                 sys.exit()
 
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    self.player.moveRight = False
-                    self.player.moveLeft = True
-                if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    self.player.moveLeft = False
-                    self.player.moveRight = True
-                if event.key == pygame.K_UP or event.key == pygame.K_w:
-                    self.player.moveDown = False
-                    self.player.moveUp = True
-                if event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    self.player.moveUp = False
-                    self.player.moveDown = True
+                self.player.keydown(event.key)
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
+
                 if event.key == pygame.K_SPACE:
                     self.player.attack()
-                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    self.player.moveLeft = False
-                if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    self.player.moveRight = False
-                if event.key == pygame.K_UP or event.key == pygame.K_w:
-                    self.player.moveUp = False
-                if event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    self.player.moveDown = False
+
+                self.player.keyup(event.key)
 
     def update_score(self):
         self.screen.blit(
@@ -227,7 +211,9 @@ class Runner:
         restart_game = False
 
         self.screen.fill((0, 0, 0))
-        text = self.create_text("You Died! Press R to restart")
+        text = self.create_text(
+            f"You Died! Press R to restart\nScore: {self.player.score}"
+        )
         textRect = text.get_rect()
         textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 

@@ -13,12 +13,12 @@ from reflexy.constants import (
     SPIDER_HEIGHT,
     SPIDER_EYE_X,
     SPIDER_EYE_Y,
-    COOLDOWN_SPIDER_FIRE,
-    FREEZE_SPIDER_TIME,
     SPIDER_ACCELERATION,
     SPIDER_ACCELERATION_FUNC,
     SPIDER_DECELERATION,
     SPIDER_DECELERATION_FUNC,
+    COOLDOWN_SPIDER_FIRE,
+    RAY_ANIMATION_TIME,
 )
 from reflexy.models.ray import Ray
 
@@ -44,6 +44,9 @@ class LaserSpider(pygame.sprite.Sprite):
         self.speed = 0
         self.acc_tracker = None
 
+        self.x_correction = None
+        self.y_correction = None
+
         self.state_of_moviment = "accelerating"
 
     def aim(self, player_center_coordenates):
@@ -54,36 +57,45 @@ class LaserSpider(pygame.sprite.Sprite):
     def update(self, screen, player_center_coordenates, time):
         self.time = time
 
+        self.set_velocity()
+
         self.eye_aim = (self.rect[0], self.rect[1])
 
-        self.set_velocity()
-        self.aim(player_center_coordenates)
+        if not self.state_of_moviment == "recoil":
+            self.aim(player_center_coordenates)
+
+        self.move_spider()
+
+        if not self.firing and self.state_of_moviment == "stoped":
+            self.firing = True
+        elif not self.firing and self.time - self.cd_tracker > COOLDOWN_SPIDER_FIRE:
+            self.state_of_moviment = "decelerating"
 
         if self.firing:
-            if self.state_of_moviment in ["keep", "accelerating"]:
-                self.state_of_moviment = "decelerating"
+            if self.state_of_moviment == "stoped":
+                self.state_of_moviment = "recoil"
 
             if not self.cd_init_fire:
                 self.call_ray(screen)
                 self.cd_init_fire = self.time
 
-            elif self.time - self.cd_init_fire < FREEZE_SPIDER_TIME:
-                self.ray.next_sprite(screen)
+            elif self.time - self.cd_init_fire < RAY_ANIMATION_TIME:
+                self.ray.next_sprite(
+                    screen,
+                    self.rect[0] - self.x_correction,
+                    self.rect[1] - self.y_correction,
+                )
 
             else:
-                self.firing = False
+                self.state_of_moviment = "accelerating"
                 self.cd_tracker = self.time
+                self.firing = False
                 self.cd_init_fire = None
+                self.acc_tracker = None
+                self.x_correction = None
+                self.y_correction = None
                 self.ray.kill()
                 self.ray = None
-        else:
-            if self.state_of_moviment in ["stoped", "decelerating"]:
-                self.state_of_moviment = "accelerating"
-
-        self.move_spider()
-
-        if not self.firing and self.time - self.cd_tracker > COOLDOWN_SPIDER_FIRE:
-            self.firing = True
 
     def set_velocity(self):
         if self.state_of_moviment == "accelerating" and self.speed < SPIDER_SPEED:
@@ -119,7 +131,27 @@ class LaserSpider(pygame.sprite.Sprite):
                 )
             ) * SPIDER_SPEED
 
-        if self.speed < 0 and self.state_of_moviment == "decelerating":
+        elif self.state_of_moviment == "recoil":
+            if not self.acc_tracker:
+                self.acc_tracker = self.time
+
+            if not self.x_correction or not self.y_correction:
+                self.x_correction = self.rect[0]
+                self.y_correction = self.rect[1]
+
+            if self.time - self.acc_tracker < RAY_ANIMATION_TIME:
+                self.speed = -(
+                    calc_acceleration(
+                        "exp",
+                        self.time,
+                        self.acc_tracker,
+                        RAY_ANIMATION_TIME * 0.8,
+                    )
+                    * SPIDER_SPEED
+                    * 2
+                )
+
+        if self.state_of_moviment == "decelerating" and self.speed <= 0.001:
             self.state_of_moviment = "stoped"
             self.speed = 0
             self.acc_tracker = None

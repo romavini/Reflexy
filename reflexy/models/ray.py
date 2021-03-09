@@ -5,6 +5,7 @@ from reflexy.constants import (
     RAY_WIDTH,
     RAY_HEIGHT,
     RAY_ORIGIN_X,
+    RAY_ANIMATION_TIME,
 )
 
 
@@ -31,10 +32,12 @@ class Ray(pygame.sprite.Sprite):
                 ]
             )
         ]
+        self.gradent_animate = len(self.images) / (RAY_ANIMATION_TIME * 20)
         self.current_image = 0
         self.image = self.images[self.current_image]
 
         self.correct_ray_to_eye()
+        self.origin_position = (self.rect[0], self.rect[1])
 
     def correct_ray_to_eye(self):
         size_ray_ratated = pygame.Surface.get_size(self.image)
@@ -56,7 +59,6 @@ class Ray(pygame.sprite.Sprite):
                 + math.sin(math.radians(self.current_angle)) * RAY_ORIGIN_X
                 + self.eye_position[1]
             )
-
         elif self.current_angle > 0:
             x = int(
                 self.correct_spider_eye[0]
@@ -71,7 +73,6 @@ class Ray(pygame.sprite.Sprite):
                 + math.sin(math.radians(self.current_angle)) * RAY_ORIGIN_X
                 + self.eye_position[1]
             )
-
         elif self.current_angle <= -90:
             x = int(
                 self.correct_spider_eye[0]
@@ -86,7 +87,6 @@ class Ray(pygame.sprite.Sprite):
                 - math.sin(math.radians(-self.current_angle)) * RAY_ORIGIN_X
                 + self.eye_position[1]
             )
-
         else:
             x = int(
                 self.correct_spider_eye[0]
@@ -103,8 +103,15 @@ class Ray(pygame.sprite.Sprite):
 
         self.rect = pygame.Rect(x, y, RAY_WIDTH, RAY_HEIGHT)
 
-    def next_sprite(self, screen):
-        self.current_image += 0.3
+    def next_sprite(self, screen, x_correction, y_correction):
+        self.rect = pygame.Rect(
+            self.origin_position[0] + x_correction,
+            self.origin_position[1] + y_correction,
+            RAY_WIDTH,
+            RAY_HEIGHT,
+        )
+        self.current_image += self.gradent_animate
+
         if self.current_image >= len(self.images) - 1:
             self.current_image = len(self.images) - 1
 

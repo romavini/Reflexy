@@ -58,6 +58,7 @@ class LaserSpider(pygame.sprite.Sprite):
         self.time = time
 
         self.set_velocity()
+        self.set_state_of_moviment()
 
         self.eye_aim = (self.rect[0], self.rect[1])
 
@@ -112,11 +113,6 @@ class LaserSpider(pygame.sprite.Sprite):
                 * SPIDER_SPEED
             )
 
-        if self.speed > SPIDER_SPEED or self.state_of_moviment == "keep":
-            self.speed = SPIDER_SPEED
-            self.state_of_moviment = "keep"
-            self.acc_tracker = None
-
         elif self.state_of_moviment == "decelerating":
             if not self.acc_tracker:
                 self.acc_tracker = self.time
@@ -151,7 +147,13 @@ class LaserSpider(pygame.sprite.Sprite):
                     * 2
                 )
 
-        if self.state_of_moviment == "decelerating" and self.speed <= 0.001:
+    def set_state_of_moviment(self):
+        if self.speed > SPIDER_SPEED or self.state_of_moviment == "keep":
+            self.speed = SPIDER_SPEED
+            self.state_of_moviment = "keep"
+            self.acc_tracker = None
+
+        elif self.state_of_moviment == "decelerating" and self.speed <= 0.001:
             self.state_of_moviment = "stoped"
             self.speed = 0
             self.acc_tracker = None

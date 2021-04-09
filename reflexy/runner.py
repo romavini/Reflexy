@@ -112,7 +112,7 @@ class Runner:
                     self.laser_draw_group.add(enemy.ray)
 
                 if enemy.ray not in self.enemy_group.sprites() and (
-                    int(enemy.ray.current_image) in [5, 6, 7]
+                    int(enemy.ray.current_image) >= 5
                 ):
                     self.laser_hit_group.add(enemy.ray)
 

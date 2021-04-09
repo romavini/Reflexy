@@ -29,6 +29,12 @@ class Ray(pygame.sprite.Sprite):
                     "ray-5.png",
                     "ray-6.png",
                     "ray-7.png",
+                    "ray-6.png",
+                    "ray-7.png",
+                    "ray-6.png",
+                    "ray-7.png",
+                    "ray-6.png",
+                    "ray-7.png",
                 ]
             )
         ]

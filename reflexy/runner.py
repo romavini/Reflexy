@@ -36,7 +36,7 @@ class Runner:
         self.last_time = self.time
         self.time_game()
 
-        self.text = create_pygame_font(FONT_SIZE, bold=True)
+        self.text = create_pygame_font(size=FONT_SIZE, bold=True)
 
         self.allow_restart = True
 
@@ -55,6 +55,7 @@ class Runner:
 
     @staticmethod
     def create_background():
+        """Create the background of the window."""
         bg = pygame.image.load(get_image_path("background-field.png"))
         return pygame.transform.scale(bg, (SCREEN_WIDTH, SCREEN_HEIGHT))
 

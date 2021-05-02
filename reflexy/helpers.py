@@ -49,7 +49,7 @@ def calc_acceleration(func, time, tracker, acceleration) -> float:
     if func not in ["log", "lin", "exp"]:
         raise ValueError("Acceleration funtions: 'log', 'lin' and 'exp'.")
 
-    if func == "log":
+    elif func == "log":
         if not (time - tracker):
             return 0
 
@@ -60,8 +60,8 @@ def calc_acceleration(func, time, tracker, acceleration) -> float:
 
         return (log + 2) / 2
 
-    if func == "lin":
+    elif func == "lin":
         return 1 / acceleration * (time - tracker)
 
-    if func == "exp":
+    elif func == "exp":
         return 2 ** (1 / acceleration * (time - tracker)) - 1

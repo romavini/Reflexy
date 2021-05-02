@@ -15,6 +15,7 @@ def test_get_image_path():
     # )
     pass
 
+
 def test_create_pygame_font():
     """Assert the type of the font."""
     # pygame.font.init()
@@ -22,6 +23,7 @@ def test_create_pygame_font():
     #     type(create_pygame_font(name=None, size=15))
     # )
     pass
+
 
 def test_calc_acceleration():
     with pytest.raises(TypeError):
@@ -37,4 +39,4 @@ def test_calc_acceleration():
         calc_acceleration(0, 0, 0, "0")
 
     with pytest.raises(ValueError):
-        calc_acceleration("0", 0, 0, 0)
+        calc_acceleration("0", 1, 0, 1)

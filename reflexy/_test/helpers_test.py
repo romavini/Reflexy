@@ -10,22 +10,21 @@ from reflexy.helpers import (
 
 def test_get_image_path():
     """Test the get_image_path function."""
-    # assert get_image_path("") == os.path.normpath(
-    #     os.path.join(os.path.dirname(__file__), "../..", "images")
-    # )
-    pass
+    with pytest.raises(TypeError):
+        get_image_path()
 
 
 def test_create_pygame_font():
     """Assert the type of the font."""
-    # pygame.font.init()
-    # assert "<class 'pygame.font.Font'>" == str(
-    #     type(create_pygame_font(name=None, size=15))
-    # )
-    pass
+    with pytest.raises(TypeError):
+        create_pygame_font(name=0)
+
+    with pytest.raises(TypeError):
+        create_pygame_font(size="18")
 
 
 def test_calc_acceleration():
+    """Test acceleration functions."""
     with pytest.raises(TypeError):
         calc_acceleration(0, 0, 0, 0)
 

@@ -30,7 +30,7 @@ class Runner:
         pygame.display.set_caption(CAPTION)
 
         self.clock = pygame.time.Clock()
-        self.background = self.create_background()
+        self.background = self.create_background("background-field.png")
 
         self.time = time.time()
         self.last_time = self.time
@@ -54,9 +54,9 @@ class Runner:
         self.cd_spawn_spider = self.time
 
     @staticmethod
-    def create_background():
+    def create_background(bg_image):
         """Create the background of the window."""
-        bg = pygame.image.load(get_image_path("background-field.png"))
+        bg = pygame.image.load(get_image_path(bg_image))
         return pygame.transform.scale(bg, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
     def time_game(self):

@@ -26,10 +26,9 @@ def create_pygame_font(
     bold -- bold of the font (defalt False)
     """
     if not isinstance(name, str):
-        raise TypeError("Font name must be a string.")
+        raise TypeError(f"Font name must be a string. Got {type(name)}.")
     if not isinstance(size, int):
-        raise TypeError("Font size must be an integer.")
-
+        raise TypeError(f"Font size must be an integer. Got {type(size)}.")
     return pygame.font.SysFont(name, size, bold)
 
 
@@ -46,7 +45,7 @@ def calc_acceleration(
     """
     if not isinstance(func_acc, str):
         raise TypeError(
-            "Acceleration function must be a string. Options: 'log', 'lin' and 'exp'."
+            f"Acceleration function must be a string. Options: 'log', 'lin' and 'exp'. Got {type(func_acc)}."
         )
 
     if not (
@@ -54,10 +53,14 @@ def calc_acceleration(
         and (isinstance(tracker, float) or isinstance(tracker, int))
         and (isinstance(acceleration, float) or isinstance(acceleration, int))
     ):
-        raise TypeError("Acceleration time must be a number.")
+        raise TypeError(
+            f"Acceleration values must be numbers. Got time:{type(time)}, tracker:{type(tracker)} and acceleration:{type(acceleration)}."
+        )
 
     if func_acc not in ["log", "lin", "exp"]:
-        raise ValueError("Acceleration functions: 'log', 'lin' and 'exp'.")
+        raise ValueError(
+            f"Acceleration functions: 'log', 'lin' and 'exp'. Got '{func_acc}'."
+        )
 
     elif func_acc == "log":
         if not (time - tracker):
@@ -74,3 +77,6 @@ def calc_acceleration(
 
     elif func_acc == "exp":
         return 2 ** (1 / acceleration * (time - tracker)) - 1
+
+    else:
+        return 0

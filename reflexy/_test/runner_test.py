@@ -7,7 +7,12 @@ from reflexy.constants import (
 from reflexy.runner import Runner
 
 
+class MockPygame:
+    def __init__(self):
+        pass
+
+
 def test_create_background():
-    pass
     # runner = Runner()
-    # assert runner.create_background()
+    # print(runner.create_background("background-field.png"))
+    pass

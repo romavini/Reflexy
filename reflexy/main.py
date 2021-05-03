@@ -2,6 +2,7 @@ import sys
 
 
 def start():
+    """Run the game."""
     from reflexy.runner import Runner
 
     runner = Runner()

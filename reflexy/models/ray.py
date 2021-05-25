@@ -1,5 +1,6 @@
 import pygame
 import math
+from typing import Optional, Sequence
 from reflexy.helpers import get_image_path
 from reflexy.constants import (
     RAY_WIDTH,
@@ -10,7 +11,13 @@ from reflexy.constants import (
 
 
 class Ray(pygame.sprite.Sprite):
-    def __init__(self, screen, correct_spider_eye, aim_angle, eye_position):
+    def __init__(
+        self,
+        screen: pygame.Surface,
+        correct_spider_eye: Sequence[int],
+        aim_angle: float,
+        eye_position: Sequence[int],
+    ):
         pygame.sprite.Sprite.__init__(self)
 
         self.current_angle = aim_angle
@@ -43,9 +50,10 @@ class Ray(pygame.sprite.Sprite):
         self.image = self.images[self.current_image]
 
         self.correct_ray_to_eye()
-        self.origin_position = (self.rect[0], self.rect[1])
+        self.origin_position: Sequence[int] = (self.rect[0], self.rect[1])
 
     def correct_ray_to_eye(self):
+        """Adjust the laser into the spider."""
         size_ray_ratated = pygame.Surface.get_size(self.image)
         B = abs(math.sin(math.radians(-self.current_angle))) * RAY_HEIGHT
         h = math.sqrt((RAY_HEIGHT) ** 2 - (B) ** 2) / 2
@@ -109,7 +117,16 @@ class Ray(pygame.sprite.Sprite):
 
         self.rect = pygame.Rect(x, y, RAY_WIDTH, RAY_HEIGHT)
 
-    def next_sprite(self, screen, x_correction, y_correction):
+    def next_sprite(
+        self, screen: pygame.Surface, x_correction: float, y_correction: float
+    ):
+        """Animate laser.
+
+        Keyword arguments:
+        screen -- surface to print
+        x_correction -- x coordinade of spider eye
+        y_correction -- y coordinade of spider eye
+        """
         self.rect = pygame.Rect(
             self.origin_position[0] + x_correction,
             self.origin_position[1] + y_correction,
@@ -123,7 +140,14 @@ class Ray(pygame.sprite.Sprite):
 
         self.image = self.images[int(self.current_image)]
 
-    def get_surface(self, filename, angle=0, scale=1):
+    def get_surface(self, filename: str, angle: float = 0, scale: float = 1):
+        """Animate laser.
+
+        Keyword arguments:
+        filename -- image name
+        angle -- angle to rotate, in degrees (default 0)
+        scale -- factor to zoom (default 1)
+        """
         return pygame.transform.rotozoom(
             pygame.image.load(get_image_path(filename)).convert_alpha(),
             angle,

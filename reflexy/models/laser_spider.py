@@ -1,6 +1,7 @@
 import pygame
 import math
 import random
+from typing import Sequence, Optional
 from reflexy.helpers import (
     get_image_path,
     calc_acceleration,
@@ -25,7 +26,7 @@ from reflexy.logic.brain import SpiderBrain
 
 
 class LaserSpider(pygame.sprite.Sprite):
-    def __init__(self, time):
+    def __init__(self, time: Optional[int]):
         pygame.sprite.Sprite.__init__(self)
 
         self.brain = SpiderBrain()
@@ -50,37 +51,54 @@ class LaserSpider(pygame.sprite.Sprite):
         self.x_correction = None
         self.y_correction = None
 
-        self.state_of_moviment = "accelerating"
+        self.state_of_movement = "accelerating"
 
-    def aim(self, player_center_coordenates):
-        x_aim = int(self.eye_aim[0] + SPIDER_EYE_X - player_center_coordenates[0])
-        y_aim = int(self.eye_aim[1] + SPIDER_EYE_Y - player_center_coordenates[1])
+    def aim(self, player_center_coordinates: Sequence[int]):
+        """Aim system.
+
+        Keyword arguments:
+        player_center_coordinates -- Sequence of player's center coordinates
+        """
+        x_aim = int(self.eye_aim[0] + SPIDER_EYE_X - player_center_coordinates[0])
+        y_aim = int(self.eye_aim[1] + SPIDER_EYE_Y - player_center_coordinates[1])
         self.aim_angle_rad = math.atan2(y_aim, -x_aim)
 
-    def update(self, screen, player_center_coordenates, time):
+    def update(  # type: ignore
+        self,
+        screen: pygame.Surface,
+        player_center_coordinates: Sequence[int],
+        time: int,
+    ):
+        """Update spider
+
+        Keyword arguments:
+        screen -- surface to print
+        player_center_coordinates -- Sequence of player's center coordinates
+        time -- current game time
+        """
         self.time = time
 
         self.set_velocity()
-        self.set_state_of_moviment()
+        self.set_state_of_movement()
 
         self.eye_aim = (self.rect[0], self.rect[1])
 
-        if not self.state_of_moviment == "recoil":
-            self.aim(player_center_coordenates)
+        if not self.state_of_movement == "recoil":
+            self.aim(player_center_coordinates)
 
         self.move_spider()
 
-        if not self.firing and self.state_of_moviment == "stoped":
+        if not self.firing and self.state_of_movement == "stoped":
             self.firing = True
         elif not self.firing and self.time - self.cd_tracker > COOLDOWN_SPIDER_FIRE:
-            self.state_of_moviment = "decelerating"
+            self.state_of_movement = "decelerating"
 
         if self.firing:
-            if self.state_of_moviment == "stoped":
-                self.state_of_moviment = "recoil"
+            if self.state_of_movement == "stoped":
+                self.state_of_movement = "recoil"
 
             if not self.cd_init_fire:
-                self.call_ray(screen, player_center_coordenates)
+                self.call_ray(screen, player_center_coordinates)
                 self.cd_init_fire = self.time
 
             elif self.time - self.cd_init_fire < RAY_ANIMATION_TIME:
@@ -91,7 +109,7 @@ class LaserSpider(pygame.sprite.Sprite):
                 )
 
             else:
-                self.state_of_moviment = "accelerating"
+                self.state_of_movement = "accelerating"
                 self.cd_tracker = self.time
                 self.firing = False
                 self.cd_init_fire = None
@@ -102,7 +120,8 @@ class LaserSpider(pygame.sprite.Sprite):
                 self.ray = None
 
     def set_velocity(self):
-        if self.state_of_moviment == "accelerating" and self.speed < SPIDER_SPEED:
+        """ Set velocity."""
+        if self.state_of_movement == "accelerating" and self.speed < SPIDER_SPEED:
             if not self.acc_tracker:
                 self.acc_tracker = self.time
 
@@ -116,7 +135,7 @@ class LaserSpider(pygame.sprite.Sprite):
                 * SPIDER_SPEED
             )
 
-        elif self.state_of_moviment == "decelerating":
+        elif self.state_of_movement == "decelerating":
             if not self.acc_tracker:
                 self.acc_tracker = self.time
 
@@ -130,7 +149,7 @@ class LaserSpider(pygame.sprite.Sprite):
                 )
             ) * SPIDER_SPEED
 
-        elif self.state_of_moviment == "recoil":
+        elif self.state_of_movement == "recoil":
             if not self.acc_tracker:
                 self.acc_tracker = self.time
 
@@ -150,28 +169,38 @@ class LaserSpider(pygame.sprite.Sprite):
                     * 2
                 )
 
-    def set_state_of_moviment(self):
-        if self.speed > SPIDER_SPEED or self.state_of_moviment == "keep":
+    def set_state_of_movement(self):
+        """ Set the state of movement."""
+        if self.speed > SPIDER_SPEED or self.state_of_movement == "keep":
             self.speed = SPIDER_SPEED
-            self.state_of_moviment = "keep"
+            self.state_of_movement = "keep"
             self.acc_tracker = None
 
-        elif self.state_of_moviment == "decelerating" and self.speed <= 0.001:
-            self.state_of_moviment = "stoped"
+        elif self.state_of_movement == "decelerating" and self.speed <= 0.001:
+            self.state_of_movement = "stoped"
             self.speed = 0
             self.acc_tracker = None
 
     def move_spider(self):
+        """Move system"""
         move_through = self.brain.move(self.aim_angle_rad, self.cd_init_fire)
         self.rect[0] += round(math.cos(move_through) * self.speed)
         self.rect[1] -= round(math.sin(move_through) * self.speed)
 
-    def call_ray(self, screen, player_center_coordenates):
+    def call_ray(
+        self, screen: pygame.Surface, player_center_coordinates: Sequence[int]
+    ):
+        """Shoot laser.
+
+        Keyword arguments:
+        screen -- surface to print
+        player_center_coordinates -- Sequence of player's center coordinates
+        """
         angle = self.brain.shot(
             math.degrees(self.aim_angle_rad),
             self.cd_init_fire,
             self.eye_aim,
-            player_center_coordenates,
+            player_center_coordinates,
         )
         self.ray = Ray(
             screen,
@@ -206,6 +235,13 @@ class LaserSpider(pygame.sprite.Sprite):
         self.rect = pygame.Rect(x, y, 128, 64)
 
     def get_surface(self, filename, angle=0, scale=1):
+        """Animate laser.
+
+        Keyword arguments:
+        filename -- image name
+        angle -- angle to rotate, in degrees (default 0)
+        scale -- factor to zoom (default 1)
+        """
         return pygame.transform.rotozoom(
             pygame.image.load(get_image_path(filename)).convert_alpha(),
             angle,

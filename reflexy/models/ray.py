@@ -1,7 +1,10 @@
 import pygame
 import math
 from typing import Optional, Sequence
-from reflexy.helpers import get_image_path
+from reflexy.helpers import (
+    get_surface,
+    get_image_path,
+)
 from reflexy.constants import (
     RAY_WIDTH,
     RAY_HEIGHT,
@@ -25,7 +28,7 @@ class Ray(pygame.sprite.Sprite):
         self.eye_position = eye_position
 
         self.images = [
-            self.get_surface(filename, self.current_angle)
+            get_surface(filename, angle=self.current_angle)
             for filename in (
                 [
                     "ray-0.png",
@@ -139,17 +142,3 @@ class Ray(pygame.sprite.Sprite):
             self.current_image = len(self.images) - 1
 
         self.image = self.images[int(self.current_image)]
-
-    def get_surface(self, filename: str, angle: float = 0, scale: float = 1):
-        """Animate laser.
-
-        Keyword arguments:
-        filename -- image name
-        angle -- angle to rotate, in degrees (default 0)
-        scale -- factor to zoom (default 1)
-        """
-        return pygame.transform.rotozoom(
-            pygame.image.load(get_image_path(filename)).convert_alpha(),
-            angle,
-            scale,
-        )

@@ -3,6 +3,7 @@ import math
 import random
 from typing import Sequence, Optional
 from reflexy.helpers import (
+    get_surface,
     get_image_path,
     calc_acceleration,
 )
@@ -33,7 +34,7 @@ class LaserSpider(pygame.sprite.Sprite):
 
         self.time = time
 
-        self.images = [self.get_surface(filename) for filename in ("laser-spider.png",)]
+        self.images = [get_surface(filename) for filename in ("laser-spider.png",)]
         self.current_image = 0
         self.image = self.images[self.current_image]
 
@@ -233,17 +234,3 @@ class LaserSpider(pygame.sprite.Sprite):
                 y = SCREEN_HEIGHT
 
         self.rect = pygame.Rect(x, y, 128, 64)
-
-    def get_surface(self, filename, angle=0, scale=1):
-        """Animate laser.
-
-        Keyword arguments:
-        filename -- image name
-        angle -- angle to rotate, in degrees (default 0)
-        scale -- factor to zoom (default 1)
-        """
-        return pygame.transform.rotozoom(
-            pygame.image.load(get_image_path(filename)).convert_alpha(),
-            angle,
-            scale,
-        )

@@ -3,6 +3,33 @@ import pygame
 import math
 
 
+def get_surface(filename: str, angle: float = 0, scale: float = 1):
+    """get surface given image name.
+
+    Keyword arguments:
+    filename -- image name
+    angle -- angle to rotate, in degrees (default 0)
+    scale -- factor to zoom (default 1)
+    """
+    if not filename:
+        raise TypeError("Missing filename argument.")
+
+    elif not isinstance(filename, str):
+        raise TypeError(f"Font name must be a string. Got {type(filename)}.")
+
+    elif not (isinstance(angle, float) or isinstance(angle, int)):
+        raise TypeError(f"Font size must be an float or integer. Got {type(angle)}.")
+
+    elif not (isinstance(scale, float) or isinstance(scale, int)):
+        raise TypeError(f"Font size must be an float or integer. Got {type(scale)}.")
+
+    return pygame.transform.rotozoom(
+        pygame.image.load(get_image_path(filename)).convert_alpha(),
+        angle,
+        scale,
+    )
+
+
 def get_image_path(filename: str, folder: str = "../images") -> str:
     """Return the path of a image.
 

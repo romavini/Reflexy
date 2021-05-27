@@ -1,5 +1,6 @@
 import pygame
 from reflexy.helpers import (
+    get_surface,
     get_image_path,
     calc_acceleration,
 )
@@ -25,7 +26,7 @@ class Player(pygame.sprite.Sprite):
         self.time = time
 
         self.images = [
-            self.get_surface(filename)
+            get_surface(filename, scale=1.2)
             for filename in (
                 [
                     "player-w-sword-00.png",
@@ -105,7 +106,7 @@ class Player(pygame.sprite.Sprite):
             self.count_blinking = self.time
 
             if self.blinking_damage:
-                self.image = self.get_surface("player-w-sword-damage.png")
+                self.image = get_surface("player-w-sword-damage.png", scale=1.2)
 
     def attack(self):
         """Sword attack."""
@@ -283,17 +284,3 @@ class Player(pygame.sprite.Sprite):
             )
         ):
             self.rect.right += self.speed
-
-    def get_surface(self, filename, angle=0, scale=1.2):
-        """Animate laser.
-
-        Keyword arguments:
-        filename -- image name
-        angle -- angle to rotate, in degrees (default 0)
-        scale -- factor to zoom (default 1.2)
-        """
-        return pygame.transform.rotozoom(
-            pygame.image.load(get_image_path(filename)).convert_alpha(),
-            angle,
-            scale,
-        )

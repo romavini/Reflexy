@@ -60,6 +60,11 @@ class Runner:
         Keyword arguments:
         bg_image -- name of background image
         """
+        if bg_image is None:
+            raise TypeError("Missing bg_image argument.")
+        elif not isinstance(bg_image, str):
+            raise TypeError(f"background image name must be a string. Got {type(bg_image)}.")
+
         bg = pygame.image.load(get_image_path(bg_image))
 
         return pygame.transform.scale(bg, (SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -80,6 +85,11 @@ class Runner:
         Keyword arguments:
         text -- text to be printed
         """
+        if text is None:
+            raise TypeError("Missing text argument.")
+        elif not isinstance(text, str):
+            raise TypeError(f"text must be a string. Got {type(text)}.")
+
         return self.text.render(text, True, (255, 255, 255))
 
     def has_collision(self) -> bool:
@@ -174,6 +184,10 @@ class Runner:
 
     def kill_spider(self, sprite: pygame.sprite.Sprite):
         """Remove killed spider sprite."""
+
+        if sprite is None:
+            raise TypeError("Missing sprite argument.")
+
         if sprite.ray:  # type: ignore
             sprite.ray.kill()  # type: ignore
             sprite.ray  # type: ignore

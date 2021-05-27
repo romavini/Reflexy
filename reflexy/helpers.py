@@ -15,13 +15,13 @@ def get_surface(filename: str, angle: float = 0, scale: float = 1):
         raise TypeError("Missing filename argument.")
 
     elif not isinstance(filename, str):
-        raise TypeError(f"Font name must be a string. Got {type(filename)}.")
+        raise TypeError(f"Image name must be a string. Got {type(filename)}.")
 
     elif not (isinstance(angle, float) or isinstance(angle, int)):
-        raise TypeError(f"Font size must be an float or integer. Got {type(angle)}.")
+        raise TypeError(f"Angle must be an float or integer. Got {type(angle)}.")
 
     elif not (isinstance(scale, float) or isinstance(scale, int)):
-        raise TypeError(f"Font size must be an float or integer. Got {type(scale)}.")
+        raise TypeError(f"Scale must be an float or integer. Got {type(scale)}.")
 
     return pygame.transform.rotozoom(
         pygame.image.load(get_image_path(filename)).convert_alpha(),

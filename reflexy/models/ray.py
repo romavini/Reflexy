@@ -130,6 +130,14 @@ class Ray(pygame.sprite.Sprite):
         x_correction -- x coordinade of spider eye
         y_correction -- y coordinade of spider eye
         """
+        if screen is None:
+            raise TypeError("Missing screen argument.")
+        elif x_correction is None:
+            raise TypeError("Missing x_correction argument.")
+        elif y_correction is None:
+            raise TypeError("Missing y_correction argument.")
+
+
         self.rect = pygame.Rect(
             self.origin_position[0] + x_correction,
             self.origin_position[1] + y_correction,

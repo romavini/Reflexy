@@ -1,5 +1,6 @@
 import pygame
 from reflexy.helpers import (
+    get_surface,
     get_image_path,
     calc_acceleration,
 )
@@ -19,13 +20,18 @@ from reflexy.constants import (
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, time):
+    def __init__(self, time: int):
+        if time is None:
+            raise TypeError("Missing argument.")
+        elif not (isinstance(time, int) or isinstance(time, float)):
+            raise TypeError(f"Timemust be float or integer. Got {type(time)}.")
+
         pygame.sprite.Sprite.__init__(self)
 
         self.time = time
 
         self.images = [
-            self.get_surface(filename)
+            get_surface(filename, scale=1.2)
             for filename in (
                 [
                     "player-w-sword-00.png",
@@ -69,7 +75,15 @@ class Player(pygame.sprite.Sprite):
         self.state_of_moviment = "accelerating"
         self.last_state_of_moviment = None
 
-    def update(self, time):
+    def update(self, time: int):  # type: ignore
+        """Update player.
+
+        Keyword arguments:
+        time -- current game time
+        """
+        if time is None:
+            raise TypeError("Missing time argument.")
+
         self.time = time
         self.image = self.images[self.current_image]
         self.set_velocity()
@@ -84,12 +98,14 @@ class Player(pygame.sprite.Sprite):
             self.attack()
 
     def set_spawn(self):
+        """Spawn player."""
         self.x = SCREEN_WIDTH / 2
         self.y = SCREEN_HEIGHT / 2
         self.center = (self.x - PLAYER_WIDTH / 2, self.y - PLAYER_HEIGHT / 2)
         self.rect = pygame.Rect(self.x, self.y, PLAYER_WIDTH, PLAYER_HEIGHT)
 
     def blink_damage(self):
+        """Give invulnerability to the player after taking damage."""
         if self.count_blinking == 0:
             self.count_blinking = self.time
 
@@ -98,9 +114,10 @@ class Player(pygame.sprite.Sprite):
             self.count_blinking = self.time
 
             if self.blinking_damage:
-                self.image = self.get_surface("player-w-sword-damage.png")
+                self.image = get_surface("player-w-sword-damage.png", scale=1.2)
 
     def attack(self):
+        """Sword attack."""
         if self.attacking or self.time - self.cd_attack > COOLDOWN_PLAYER_SWORD:
             self.attacking = True
             self.current_image += 1
@@ -113,6 +130,14 @@ class Player(pygame.sprite.Sprite):
             self.image = self.images[self.current_image]
 
     def keydown(self, key):
+        """key system
+
+        Keyword arguments:
+        key -- key pressed
+        """
+        if key is None:
+            raise TypeError("Missing time argument.")
+
         if key == pygame.K_LEFT or key == pygame.K_a:
             self.move_right = False
             self.move_left = True
@@ -144,6 +169,14 @@ class Player(pygame.sprite.Sprite):
             self.state_of_moviment = "accelerating"
 
     def keyup(self, key):
+        """key system
+
+        Keyword arguments:
+        key -- key released
+        """
+        if key is None:
+            raise TypeError("Missing time argument.")
+
         if key == pygame.K_LEFT or key == pygame.K_a:
             self.move_left = False
         elif key == pygame.K_RIGHT or key == pygame.K_d:
@@ -163,6 +196,7 @@ class Player(pygame.sprite.Sprite):
             self.state_of_moviment = "decelerating"
 
     def set_velocity(self):
+        """Acceleration system, set the state of movement."""
         if not (self.move_up or self.move_down) and (self.move_left or self.move_right):
             self.vertical_acc = None
 
@@ -232,6 +266,7 @@ class Player(pygame.sprite.Sprite):
             self.last_state_of_moviment = "stoped"
 
     def move_player(self):
+        """Movement system."""
         if self.rect.bottom < SCREEN_HEIGHT and (
             self.move_down
             or (
@@ -263,10 +298,3 @@ class Player(pygame.sprite.Sprite):
             )
         ):
             self.rect.right += self.speed
-
-    def get_surface(self, filename, angle=0, scale=1.2):
-        return pygame.transform.rotozoom(
-            pygame.image.load(get_image_path(filename)).convert_alpha(),
-            angle,
-            scale,
-        )

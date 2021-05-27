@@ -8,15 +8,17 @@ from reflexy.helpers import (
     calc_acceleration,
 )
 
+
 def test_get_surface():
     with pytest.raises(TypeError):
         get_surface()
     with pytest.raises(TypeError):
         get_surface(42)
     with pytest.raises(TypeError):
-        get_surface('42', angle='42')
+        get_surface("42", angle="42")
     with pytest.raises(TypeError):
-        get_surface('42', scale='42')
+        get_surface("42", scale="42")
+
 
 def test_get_image_path():
     """Test the get_image_path function."""

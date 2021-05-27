@@ -21,6 +21,10 @@ class Ray(pygame.sprite.Sprite):
         aim_angle: float,
         eye_position: Sequence[int],
     ):
+        arguments = [screen, correct_spider_eye, aim_angle, eye_position]
+        if None in arguments:
+            raise TypeError(f"Missing arguments.")
+
         pygame.sprite.Sprite.__init__(self)
 
         self.current_angle = aim_angle
@@ -136,7 +140,6 @@ class Ray(pygame.sprite.Sprite):
             raise TypeError("Missing x_correction argument.")
         elif y_correction is None:
             raise TypeError("Missing y_correction argument.")
-
 
         self.rect = pygame.Rect(
             self.origin_position[0] + x_correction,

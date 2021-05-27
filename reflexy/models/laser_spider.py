@@ -1,5 +1,5 @@
-import pygame
 import math
+import pygame
 import random
 from typing import Sequence, Optional
 from reflexy.helpers import (
@@ -28,6 +28,11 @@ from reflexy.logic.brain import SpiderBrain
 
 class LaserSpider(pygame.sprite.Sprite):
     def __init__(self, time: Optional[int]):
+        if time is None:
+            raise TypeError("Missing argument.")
+        elif not (isinstance(time, int) or isinstance(time, float)):
+            raise TypeError(f"Timemust be float or integer. Got {type(time)}.")
+
         pygame.sprite.Sprite.__init__(self)
 
         self.brain = SpiderBrain()
@@ -60,6 +65,16 @@ class LaserSpider(pygame.sprite.Sprite):
         Keyword arguments:
         player_center_coordinates -- Sequence of player's center coordinates
         """
+        if player_center_coordinates is None:
+            raise TypeError("Missing argument.")
+        elif not (
+            isinstance(player_center_coordinates, list)
+            or isinstance(player_center_coordinates, tuple)
+        ):
+            raise TypeError(
+                f"player_center_coordinates must be list or tuple. Got {type(player_center_coordinates)}."
+            )
+
         x_aim = int(self.eye_aim[0] + SPIDER_EYE_X - player_center_coordinates[0])
         y_aim = int(self.eye_aim[1] + SPIDER_EYE_Y - player_center_coordinates[1])
         self.aim_angle_rad = math.atan2(y_aim, -x_aim)
@@ -77,6 +92,10 @@ class LaserSpider(pygame.sprite.Sprite):
         player_center_coordinates -- Sequence of player's center coordinates
         time -- current game time
         """
+        arguments = [screen, player_center_coordinates, time]
+        if None in arguments:
+            raise TypeError("Missing argument.")
+
         self.time = time
 
         self.set_velocity()

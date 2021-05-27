@@ -21,6 +21,11 @@ from reflexy.constants import (
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, time: int):
+        if time is None:
+            raise TypeError("Missing argument.")
+        elif not (isinstance(time, int) or isinstance(time, float)):
+            raise TypeError(f"Timemust be float or integer. Got {type(time)}.")
+
         pygame.sprite.Sprite.__init__(self)
 
         self.time = time
@@ -76,6 +81,9 @@ class Player(pygame.sprite.Sprite):
         Keyword arguments:
         time -- current game time
         """
+        if time is None:
+            raise TypeError("Missing time argument.")
+
         self.time = time
         self.image = self.images[self.current_image]
         self.set_velocity()
@@ -127,6 +135,9 @@ class Player(pygame.sprite.Sprite):
         Keyword arguments:
         key -- key pressed
         """
+        if key is None:
+            raise TypeError("Missing time argument.")
+
         if key == pygame.K_LEFT or key == pygame.K_a:
             self.move_right = False
             self.move_left = True
@@ -163,6 +174,9 @@ class Player(pygame.sprite.Sprite):
         Keyword arguments:
         key -- key released
         """
+        if key is None:
+            raise TypeError("Missing time argument.")
+
         if key == pygame.K_LEFT or key == pygame.K_a:
             self.move_left = False
         elif key == pygame.K_RIGHT or key == pygame.K_d:

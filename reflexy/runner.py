@@ -1,6 +1,7 @@
 import pygame
 import sys
 import time
+from reflexy.menus import main_menu, restart
 from reflexy.constants import (
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
@@ -12,18 +13,19 @@ from reflexy.constants import (
     COOLDOWN_PLAYER_IMMUNE,
 )
 from reflexy.helpers import (
+    create_text,
     get_image_path,
     create_pygame_font,
     get_minor_distance,
 )
 from reflexy.models.player import Player
 from reflexy.models.laser_spider import LaserSpider
-from reflexy.main import start
 
 
 class Runner:
     def __init__(self, autonomous=False):
         self.autonomous = autonomous
+        self.started = False
         pygame.init()
 
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -80,19 +82,6 @@ class Runner:
             / CLOCK_TICK_REFERENCE
         )
         self.last_time = time.time()
-
-    def create_text(self, text: str) -> pygame.surface.Surface:
-        """Create a surface text in the window.
-
-        Keyword arguments:
-        text -- text to be printed
-        """
-        if text is None:
-            raise TypeError("Missing text argument.")
-        elif not isinstance(text, str):
-            raise TypeError(f"text must be a string. Got {type(text)}.")
-
-        return self.text.render(text, True, (255, 255, 255))
 
     def has_collision(self) -> bool:
         """Check collisions in each frame."""
@@ -223,13 +212,15 @@ class Runner:
 
     def update_score_lives(self):
         """Update player's lives and score."""
-        self.screen.blit(
-            self.create_text("Lives = " + str(self.player.hp)),
-            (FONT_SIZE, SCREEN_HEIGHT / 8),
+        create_text(
+            self,
+            "Lives = " + str(self.player.hp),
+            (SCREEN_WIDTH // 10, SCREEN_HEIGHT // 8),
         )
-        self.screen.blit(
-            self.create_text(str(self.player.score)),
-            ((SCREEN_WIDTH - (FONT_SIZE / 2)) / 2, SCREEN_HEIGHT / 8),
+        create_text(
+            self,
+            str(self.player.score),
+            (SCREEN_WIDTH // 2, SCREEN_HEIGHT / 8),
         )
 
     def update_frame(self):
@@ -253,48 +244,14 @@ class Runner:
         self.update_score_lives()
         pygame.display.update()
 
-    def restart(self):
-        """Draw the restart screen."""
-        if not self.allow_restart:
-            pygame.quit()
-            sys.exit()
-
-        restart_game = False
-
-        self.screen.fill((0, 0, 0))
-        text = self.create_text(
-            f"You Died! Press R to restart\nScore: {self.player.score}"
-        )
-        textRect = text.get_rect()
-        textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-
-        while not restart_game:
-            self.clock.tick(CLOCK_TICK_GAME_SPEED)
-            self.screen.blit(self.background, (0, 0))
-            self.screen.blit(text, textRect)
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_r:
-                        restart_game = True
-                    if event.key == pygame.K_ESCAPE:
-                        pygame.quit()
-                        sys.exit()
-
-            pygame.display.update()
-
-        start()
-
     def run(self):
         """Loop each frame of the game."""
+        main_menu(self)
+
         while self.player.hp > 0:
             self.clock.tick(CLOCK_TICK_GAME_SPEED)
             self.check_events()
             self.update_frame()
             self.hp()
 
-        self.restart()
+        restart(self)

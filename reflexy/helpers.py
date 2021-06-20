@@ -1,4 +1,5 @@
 import os
+from typing import Tuple
 import pygame
 import math
 
@@ -33,11 +34,15 @@ def aim(center_coord_1, center_coord_2, h_incre=0, v_incre=0):
     """
     if center_coord_1 is None or center_coord_2 is None:
         raise TypeError("Missing argument.")
-    elif not (isinstance(center_coord_1, list) or isinstance(center_coord_1, tuple)):
+    elif not (
+        isinstance(center_coord_1, list) or isinstance(center_coord_1, tuple)
+    ):
         raise TypeError(
             f"center_coord_1 must be list or tuple. Got {type(center_coord_1)}."
         )
-    elif not (isinstance(center_coord_2, list) or isinstance(center_coord_2, tuple)):
+    elif not (
+        isinstance(center_coord_2, list) or isinstance(center_coord_2, tuple)
+    ):
         raise TypeError(
             f"center_coord_2 must be list or tuple. Got {type(center_coord_2)}."
         )
@@ -63,10 +68,14 @@ def get_surface(filename: str, angle: float = 0, scale: float = 1):
         raise TypeError(f"Image name must be a string. Got {type(filename)}.")
 
     elif not (isinstance(angle, float) or isinstance(angle, int)):
-        raise TypeError(f"Angle must be an float or integer. Got {type(angle)}.")
+        raise TypeError(
+            f"Angle must be an float or integer. Got {type(angle)}."
+        )
 
     elif not (isinstance(scale, float) or isinstance(scale, int)):
-        raise TypeError(f"Scale must be an float or integer. Got {type(scale)}.")
+        raise TypeError(
+            f"Scale must be an float or integer. Got {type(scale)}."
+        )
 
     return pygame.transform.rotozoom(
         pygame.image.load(get_image_path(filename)).convert_alpha(),
@@ -84,7 +93,9 @@ def get_image_path(filename: str, folder: str = "../images") -> str:
     if not filename:
         raise TypeError("Missing filename argument.")
 
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), folder, filename))
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), folder, filename)
+    )
 
 
 def create_pygame_font(
@@ -102,6 +113,30 @@ def create_pygame_font(
     if not isinstance(size, int):
         raise TypeError(f"Font size must be an integer. Got {type(size)}.")
     return pygame.font.SysFont(name, size, bold)
+
+
+def create_text(
+    runner,
+    text: str,
+    pos_center: Tuple[int, int],
+):
+    """Create a surface text in the window.
+
+    Keyword arguments:
+    runner -- Runner class
+    text -- text to be printed
+    pos_center -- tuple with the center position
+    """
+    if text is None:
+        raise TypeError("Missing text argument.")
+    elif not isinstance(text, str):
+        raise TypeError(f"text must be a string. Got {type(text)}.")
+
+    text_render = runner.text.render(text, True, (255, 255, 255))
+    textRect = text_render.get_rect()
+    textRect.center = pos_center
+
+    runner.screen.blit(text_render, textRect)
 
 
 def calc_acceleration(

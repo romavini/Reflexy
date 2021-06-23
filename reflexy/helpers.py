@@ -4,6 +4,161 @@ import pygame
 import math
 
 
+def intersect_hit_box(segment_a, hit_box) -> bool:
+    for [
+        box_start_side_point,
+        box_end_side_point,
+    ] in hit_box:
+        dx0 = segment_a[1][0] - segment_a[0][0]
+        dx1 = box_end_side_point[0] - box_start_side_point[0]
+        dy0 = segment_a[1][1] - segment_a[0][1]
+        dy1 = box_end_side_point[1] - box_start_side_point[1]
+        p0 = dy1 * (box_end_side_point[0] - segment_a[0][0]) - dx1 * (
+            box_end_side_point[1] - segment_a[0][1]
+        )
+        p1 = dy1 * (box_end_side_point[0] - segment_a[1][0]) - dx1 * (
+            box_end_side_point[1] - segment_a[1][1]
+        )
+        p2 = dy0 * (segment_a[1][0] - box_start_side_point[0]) - dx0 * (
+            segment_a[1][1] - box_start_side_point[1]
+        )
+        p3 = dy0 * (segment_a[1][0] - box_end_side_point[0]) - dx0 * (
+            segment_a[1][1] - box_end_side_point[1]
+        )
+        if (p0 * p1 <= 0) & (p2 * p3 <= 0):
+            return True
+
+    return False
+
+
+def get_hit_box(individual):
+    hit_box = []
+
+    # Top line
+    start_pos = individual.rect[:2]
+    end_pos = [individual.rect[0] + individual.rect[2], individual.rect[1]]
+    hit_box.append([start_pos, end_pos])
+
+    # Left line
+    start_pos = individual.rect[:2]
+    end_pos = [individual.rect[0], individual.rect[1] + individual.rect[3]]
+    hit_box.append([start_pos, end_pos])
+
+    # Down line
+    start_pos = [
+        individual.rect[0] + individual.rect[2],
+        individual.rect[1] + individual.rect[3],
+    ]
+    end_pos = [individual.rect[0], individual.rect[1] + individual.rect[3]]
+    hit_box.append([start_pos, end_pos])
+
+    # Right line
+    start_pos = [
+        individual.rect[0] + individual.rect[2],
+        individual.rect[1] + individual.rect[3],
+    ]
+    end_pos = [individual.rect[0] + individual.rect[2], individual.rect[1]]
+    hit_box.append([start_pos, end_pos])
+
+    return hit_box
+
+
+def draw_box(
+    screen: pygame.Surface,
+    enemy,
+    color=pygame.Color("green"),
+    width=2,
+):
+    for [box_start_side_point, box_end_side_point] in enemy.hit_box:
+        pygame.draw.line(
+            screen,
+            color=color,
+            start_pos=box_start_side_point,
+            end_pos=box_end_side_point,
+            width=width,
+        )
+
+
+def vision(
+    screen: pygame.Surface,
+    self_sprite,
+    other_sprite,
+    vision_length: int,
+    self_allies=None,
+    other_has_group: bool = False,
+    color=pygame.Color("blue"),
+    width=1,
+    draw=True,
+):
+    if draw:
+        draw_box(
+            screen,
+            self_sprite,
+        )
+
+    vec_enemy_vision = []
+
+    if not (self_allies is None):
+        vec_ally_vision = []
+
+    for ang in range(0, 360, 10):
+        local_color = color
+        v_disloc = math.sin(math.radians(ang))
+        h_disloc = math.cos(math.radians(ang))
+
+        start_pos = (
+            self_sprite.center[0] - v_disloc * vision_length,
+            self_sprite.center[1] + h_disloc * vision_length,
+        )
+        end_pos = (self_sprite.center[0], self_sprite.center[1])
+
+        if not (self_allies is None):
+            for ally in self_allies:
+                has_intersect = intersect_hit_box(
+                    segment_a=(start_pos, end_pos),
+                    hit_box=ally.hit_box,
+                )
+                if has_intersect and (ally.center != self_sprite.center):
+                    local_color = pygame.Color("green")
+                    vec_ally_vision.append(1)
+                else:
+                    vec_ally_vision.append(0)
+
+        if other_has_group:
+            for enemy in other_sprite:
+                has_intersect = intersect_hit_box(
+                    segment_a=(start_pos, end_pos),
+                    hit_box=enemy.hit_box,
+                )
+                if has_intersect:
+                    local_color = pygame.Color("red")
+                    vec_enemy_vision.append(1)
+                else:
+                    vec_enemy_vision.append(0)
+        else:
+            has_intersect = intersect_hit_box(
+                segment_a=(start_pos, end_pos),
+                hit_box=other_sprite.hit_box,
+            )
+            if has_intersect:
+                local_color = pygame.Color("red")
+                vec_enemy_vision.append(1)
+            else:
+                vec_enemy_vision.append(0)
+
+        pygame.draw.line(
+            screen,
+            color=local_color,
+            start_pos=start_pos,
+            end_pos=end_pos,
+            width=width,
+        )
+    vec_vision = vec_enemy_vision
+    if not (self_allies is None):
+        vec_vision.extend(vec_ally_vision)
+    return vec_vision
+
+
 def get_minor_distance(player_rect, enemy_group):
     p_x, p_y = player_rect
 
@@ -34,15 +189,11 @@ def aim(center_coord_1, center_coord_2, h_incre=0, v_incre=0):
     """
     if center_coord_1 is None or center_coord_2 is None:
         raise TypeError("Missing argument.")
-    elif not (
-        isinstance(center_coord_1, list) or isinstance(center_coord_1, tuple)
-    ):
+    elif not (isinstance(center_coord_1, list) or isinstance(center_coord_1, tuple)):
         raise TypeError(
             f"center_coord_1 must be list or tuple. Got {type(center_coord_1)}."
         )
-    elif not (
-        isinstance(center_coord_2, list) or isinstance(center_coord_2, tuple)
-    ):
+    elif not (isinstance(center_coord_2, list) or isinstance(center_coord_2, tuple)):
         raise TypeError(
             f"center_coord_2 must be list or tuple. Got {type(center_coord_2)}."
         )
@@ -68,14 +219,10 @@ def get_surface(filename: str, angle: float = 0, scale: float = 1):
         raise TypeError(f"Image name must be a string. Got {type(filename)}.")
 
     elif not (isinstance(angle, float) or isinstance(angle, int)):
-        raise TypeError(
-            f"Angle must be an float or integer. Got {type(angle)}."
-        )
+        raise TypeError(f"Angle must be an float or integer. Got {type(angle)}.")
 
     elif not (isinstance(scale, float) or isinstance(scale, int)):
-        raise TypeError(
-            f"Scale must be an float or integer. Got {type(scale)}."
-        )
+        raise TypeError(f"Scale must be an float or integer. Got {type(scale)}.")
 
     return pygame.transform.rotozoom(
         pygame.image.load(get_image_path(filename)).convert_alpha(),
@@ -93,9 +240,7 @@ def get_image_path(filename: str, folder: str = "../images") -> str:
     if not filename:
         raise TypeError("Missing filename argument.")
 
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), folder, filename)
-    )
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), folder, filename))
 
 
 def create_pygame_font(

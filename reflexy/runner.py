@@ -23,8 +23,9 @@ from reflexy.models.laser_spider import LaserSpider
 
 
 class Runner:
-    def __init__(self, autonomous=False):
+    def __init__(self, autonomous=False, show_vision=False):
         self.autonomous = autonomous
+        self.show_vision = show_vision
         self.started = False
         pygame.init()
 
@@ -48,8 +49,20 @@ class Runner:
         self.laser_hit_group = pygame.sprite.Group()
         self.effect_group = pygame.sprite.Group()
 
-        self.player = Player(self.time, self.autonomous)
-        self.enemy_group.add(LaserSpider(self.time, self.autonomous))
+        self.player = Player(
+            self.screen,
+            self.time,
+            self.autonomous,
+            self.show_vision,
+        )
+        self.enemy_group.add(
+            LaserSpider(
+                self.screen,
+                self.time,
+                self.autonomous,
+                self.show_vision,
+            )
+        )
         self.player_group.add(self.player)
         self.player_hit = False
         self.cd_player_hit = 0
@@ -171,7 +184,14 @@ class Runner:
 
     def respawn_spider(self):
         """Add a Spider."""
-        self.enemy_group.add(LaserSpider(self.time, self.autonomous))
+        self.enemy_group.add(
+            LaserSpider(
+                self.screen,
+                self.time,
+                self.autonomous,
+                self.show_vision,
+            )
+        )
 
     def kill_spider(self, sprite: pygame.sprite.Sprite):
         """Remove killed spider sprite."""
@@ -239,9 +259,10 @@ class Runner:
         ]:
             group.draw(self.screen)
 
-        self.enemy_group.update(self.screen, self.player.center, self.time)
+        self.enemy_group.update(self.time, self.player, self.enemy_group)
         self.player_group.update(self.time, self.enemy_group)
         self.update_score_lives()
+
         pygame.display.update()
 
     def run(self):

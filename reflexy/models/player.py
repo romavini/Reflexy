@@ -1,10 +1,13 @@
 import pygame
 from reflexy.helpers import (
+    get_hit_box,
     get_minor_distance,
     get_surface,
     calc_acceleration,
+    vision,
 )
 from reflexy.constants import (
+    PLAYER_VISION,
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
     PLAYER_SPEED,
@@ -21,7 +24,13 @@ from reflexy.logic.brain import PlayerBrain
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, time: int, autonomous: bool = False):
+    def __init__(
+        self,
+        screen: pygame.Surface,
+        time: int,
+        autonomous: bool = False,
+        show_vision: bool = True,
+    ):
         if time is None:
             raise TypeError("Missing argument.")
         elif not (isinstance(time, int) or isinstance(time, float)):
@@ -29,14 +38,16 @@ class Player(pygame.sprite.Sprite):
 
         pygame.sprite.Sprite.__init__(self)
 
+        self.screen = screen
         self.time = time
         self.autonomous = autonomous
+        self.show_vision = show_vision
 
         if self.autonomous:
             self.brain = PlayerBrain()
 
         self.images = [
-            get_surface(filename, scale=1.2)
+            get_surface(filename, scale=1)
             for filename in (
                 [
                     "player-w-sword-00.png",
@@ -80,7 +91,13 @@ class Player(pygame.sprite.Sprite):
         self.state_of_moviment = "accelerating"
         self.last_state_of_moviment = None
 
-    def update(self, time: int, enemy_group):  # type: ignore
+        self.hit_box = get_hit_box(self)
+
+    def update(
+        self,
+        time: int,
+        enemy_group,
+    ):  # type: ignore
         """Update player.
 
         Keyword arguments:
@@ -88,6 +105,18 @@ class Player(pygame.sprite.Sprite):
         """
         if time is None:
             raise TypeError("Missing time argument.")
+
+        self.hit_box = get_hit_box(self)
+
+        if self.show_vision or self.autonomous:
+            player_vision = vision(
+                self.screen,
+                self,
+                enemy_group,
+                PLAYER_VISION,
+                other_has_group=True,
+                draw=self.show_vision,
+            )
 
         self.time = time
         self.image = self.images[self.current_image]
@@ -98,23 +127,13 @@ class Player(pygame.sprite.Sprite):
         )
 
         if self.autonomous:
-            [ang, h_dist, v_dist] = get_minor_distance(
-                self.center,
-                enemy_group,
-            )
             [
                 self.move_left,
                 self.move_right,
                 self.move_up,
                 self.move_down,
                 to_attack,
-            ] = self.brain.analyze(
-                self.blinking_damage,
-                self.hp,
-                ang,
-                h_dist,
-                v_dist,
-            )
+            ] = self.brain.analyze(vec_vision)
 
             if to_attack:
                 self.attack()
@@ -130,7 +149,7 @@ class Player(pygame.sprite.Sprite):
         """Spawn player."""
         self.x = SCREEN_WIDTH / 2
         self.y = SCREEN_HEIGHT / 2
-        self.center = (self.x - PLAYER_WIDTH / 2, self.y - PLAYER_HEIGHT / 2)
+        self.center = (self.x + PLAYER_WIDTH / 2, self.y + PLAYER_HEIGHT / 2)
         self.rect = pygame.Rect(self.x, self.y, PLAYER_WIDTH, PLAYER_HEIGHT)
 
     def blink_damage(self):
@@ -143,7 +162,7 @@ class Player(pygame.sprite.Sprite):
             self.count_blinking = self.time
 
             if self.blinking_damage:
-                self.image = get_surface("player-w-sword-damage.png", scale=1.2)
+                self.image = get_surface("player-w-sword-damage.png", scale=1)
 
     def attack(self):
         """Sword attack."""

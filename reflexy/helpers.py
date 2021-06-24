@@ -34,7 +34,7 @@ def intersect_hit_box(segment_a, hit_box) -> bool:
     return False
 
 
-def get_hit_box(individual):
+def get_hit_box(individual, angle: float = 0):
     hit_box = []
 
     # Top line
@@ -68,11 +68,20 @@ def get_hit_box(individual):
 
 def draw_box(
     screen: pygame.Surface,
-    enemy,
+    self_sprite,
     color=pygame.Color("green"),
     width=2,
 ):
-    for [box_start_side_point, box_end_side_point] in enemy.hit_box:
+    # if len(self_sprite.hit_box) == 2:
+    #     pygame.draw.line(
+    #         screen,
+    #         color=color,
+    #         start_pos=self_sprite.hit_box[0],
+    #         end_pos=self_sprite.hit_box[1],
+    #         width=2,
+    #     )
+    # else:
+    for [box_start_side_point, box_end_side_point] in self_sprite.hit_box:
         pygame.draw.line(
             screen,
             color=color,
@@ -99,8 +108,9 @@ def vision(
             self_sprite,
         )
 
-    vec_enemy_vision = []
     vec_wall_vision = []
+    vec_enemy_vision = []
+    vec_laser_vision = []
 
     if not (self_allies is None):
         vec_ally_vision = []
@@ -154,11 +164,13 @@ def vision(
         # Enemy detection
         if other_has_group:
             enemy_detect = False
+
             for enemy in other_sprite:
                 has_intersect = intersect_hit_box(
                     segment_a=(start_pos, end_pos),
                     hit_box=enemy.hit_box,
                 )
+
                 if has_intersect:
                     enemy_detect = True
                     break
@@ -175,12 +187,78 @@ def vision(
                 segment_a=(start_pos, end_pos),
                 hit_box=other_sprite.hit_box,
             )
+
             if has_intersect:
                 local_color = pygame.Color("red")
                 local_width = 2
                 vec_enemy_vision.append(1)
             else:
                 vec_enemy_vision.append(0)
+
+        # Laser detection
+        if other_has_group:
+            laser_detect = False
+
+            for enemy in other_sprite:
+                has_intersect = False
+                if not (enemy.ray is None):
+                    has_intersect = intersect_hit_box(
+                        segment_a=(start_pos, end_pos),
+                        hit_box=enemy.ray.hit_box,
+                    )
+
+                if has_intersect:
+                    laser_detect = True
+                    break
+
+            if laser_detect:
+                local_color = pygame.Color("blue")
+                local_width = 2
+                vec_laser_vision.append(1)
+            else:
+                vec_laser_vision.append(0)
+
+        elif not (self_allies is None):
+            ally_laser_detected = False
+            for ally in self_allies:
+                if ally.center != self_sprite.center and not (ally.ray is None):
+                    has_intersect = intersect_hit_box(
+                        segment_a=(start_pos, end_pos),
+                        hit_box=ally.ray.hit_box,
+                    )
+
+                    if has_intersect and (ally.center != self_sprite.center):
+                        ally_laser_detected = True
+                        break
+
+            if ally_laser_detected:
+                local_color = pygame.Color("blue")
+                local_width = 2
+                vec_laser_vision.append(1)
+            else:
+                vec_laser_vision.append(0)
+
+        else:
+            laser_detect = False
+
+            try:
+                has_intersect = False
+
+                if not (other_sprite.ray is None):
+                    has_intersect = intersect_hit_box(
+                        segment_a=(start_pos, end_pos),
+                        hit_box=other_sprite.ray.hit_box,
+                    )
+
+            except AttributeError:
+                pass
+
+            if has_intersect:
+                local_color = pygame.Color("blue")
+                local_width = 2
+                vec_laser_vision.append(1)
+            else:
+                vec_laser_vision.append(0)
 
         if draw:
             pygame.draw.line(
@@ -192,6 +270,7 @@ def vision(
             )
 
     vec_vision = vec_enemy_vision
+    vec_vision.extend(vec_laser_vision)
     vec_vision.extend(vec_wall_vision)
 
     if not (self_allies is None):

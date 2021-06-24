@@ -6,7 +6,9 @@ from reflexy.helpers import (
     vision,
 )
 from reflexy.constants import (
-    PLAYER_VISION,
+    LAYERS,
+    PLAYER_VISION_RANGE,
+    PLAYER_VISION_CHANNELS,
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
     PLAYER_SPEED,
@@ -18,6 +20,7 @@ from reflexy.constants import (
     PLAYER_ACCELERATION_FUNC,
     PLAYER_DECELERATION,
     PLAYER_DECELERATION_FUNC,
+    PLAYER_OUTPUTS,
 )
 from reflexy.logic.brain import Brain
 
@@ -110,14 +113,17 @@ class Player(pygame.sprite.Sprite):
                 self.screen,
                 self,
                 enemy_group,
-                PLAYER_VISION,
+                PLAYER_VISION_RANGE,
                 other_has_group=True,
                 draw=self.show_vision,
             )
 
         if self.autonomous and self.brain is None:
+            layers = [PLAYER_VISION_CHANNELS]
+            layers.extend(LAYERS)
+            layers.extend([PLAYER_OUTPUTS])
             self.brain = Brain(
-                layers=[len(player_vision), 100, 5],
+                layers=layers,
             )
 
         self.time = time
@@ -252,14 +258,24 @@ class Player(pygame.sprite.Sprite):
 
     def set_velocity(self):
         """Acceleration system, set the state of movement."""
-        if not (self.move_up or self.move_down) and (self.move_left or self.move_right):
+        if not (self.move_up or self.move_down) and (
+            self.move_left or self.move_right
+        ):
             self.vertical_acc = None
 
-        if not (self.move_left or self.move_right) and (self.move_up or self.move_down):
+        if not (self.move_left or self.move_right) and (
+            self.move_up or self.move_down
+        ):
             self.horizontal_acc = None
 
-        if self.state_of_moviment == "accelerating" and self.speed < PLAYER_SPEED:
-            if not self.acc_tracker or self.last_state_of_moviment == "decelerating":
+        if (
+            self.state_of_moviment == "accelerating"
+            and self.speed < PLAYER_SPEED
+        ):
+            if (
+                not self.acc_tracker
+                or self.last_state_of_moviment == "decelerating"
+            ):
                 self.acc_tracker = self.time
 
             if not self.speed:
@@ -291,7 +307,10 @@ class Player(pygame.sprite.Sprite):
             self.last_state_of_moviment = "keep"
 
         elif self.state_of_moviment == "decelerating":
-            if not self.acc_tracker or self.last_state_of_moviment == "accelerating":
+            if (
+                not self.acc_tracker
+                or self.last_state_of_moviment == "accelerating"
+            ):
                 self.acc_tracker = self.time
 
             if self.speed != PLAYER_SPEED and self.current_speed is None:
@@ -325,14 +344,18 @@ class Player(pygame.sprite.Sprite):
         if self.rect.bottom < SCREEN_HEIGHT and (
             self.move_down
             or (
-                self.state_of_moviment == "decelerating" and self.vertical_acc == "down"
+                self.state_of_moviment == "decelerating"
+                and self.vertical_acc == "down"
             )
         ):
             self.rect.top += self.speed
 
         if self.rect.top > -18 and (
             self.move_up
-            or (self.state_of_moviment == "decelerating" and self.vertical_acc == "up")
+            or (
+                self.state_of_moviment == "decelerating"
+                and self.vertical_acc == "up"
+            )
         ):
             self.rect.top -= self.speed
 

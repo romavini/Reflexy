@@ -13,7 +13,9 @@ from reflexy.constants import (
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
     SPIDER_SPEED,
-    SPIDER_VISION,
+    SPIDER_VISION_RANGE,
+    SPIDER_VISION_CHANNELS,
+    LAYERS,
     SPIDER_WIDTH,
     SPIDER_HEIGHT,
     SPIDER_EYE_X,
@@ -24,6 +26,7 @@ from reflexy.constants import (
     SPIDER_DECELERATION_FUNC,
     COOLDOWN_SPIDER_FIRE,
     RAY_ANIMATION_TIME,
+    SPIDER_OUTPUTS,
 )
 from reflexy.models.ray import Ray
 from reflexy.logic.brain import Brain
@@ -50,7 +53,9 @@ class LaserSpider(pygame.sprite.Sprite):
         self.show_vision = show_vision
         self.brain = None
 
-        self.images = [get_surface(filename) for filename in ("laser-spider.png",)]
+        self.images = [
+            get_surface(filename) for filename in ("laser-spider.png",)
+        ]
         self.current_image = 0
         self.image = self.images[self.current_image]
 
@@ -96,15 +101,18 @@ class LaserSpider(pygame.sprite.Sprite):
                 self.screen,
                 self,
                 player_sprite,
-                SPIDER_VISION,
+                SPIDER_VISION_RANGE,
                 self_allies=enemy_group,
                 other_has_group=False,
                 draw=self.show_vision,
             )
 
         if self.autonomous and self.brain is None:
+            layers = [SPIDER_VISION_CHANNELS]
+            layers.extend(LAYERS)
+            layers.extend([SPIDER_OUTPUTS])
             self.brain = Brain(
-                layers=[len(spider_vision), 100, 6],
+                layers=layers,
             )
 
         self.time = time
@@ -134,7 +142,7 @@ class LaserSpider(pygame.sprite.Sprite):
                 ]
             )
             if not self.state_of_movement == "recoil":
-                self.aim_angle_rad = math.radians(self.to_angle)
+                self.aim_angle_rad = self.to_angle
 
         else:
             if not self.state_of_movement == "recoil":
@@ -151,7 +159,7 @@ class LaserSpider(pygame.sprite.Sprite):
         self.eye_aim = (self.rect[0], self.rect[1])
 
         self.move_spider()
-        if self.to_fire and (
+        if (self.to_fire or self.firing) and (
             self.firing or self.time - self.cd_tracker > COOLDOWN_SPIDER_FIRE
         ):
             self.fire(player_sprite)
@@ -159,7 +167,10 @@ class LaserSpider(pygame.sprite.Sprite):
     def fire(self, player_sprite):
         if not self.firing and self.state_of_movement == "stoped":
             self.firing = True
-        elif not self.firing and self.time - self.cd_tracker > COOLDOWN_SPIDER_FIRE:
+        elif (
+            not self.firing
+            and self.time - self.cd_tracker > COOLDOWN_SPIDER_FIRE
+        ):
             self.state_of_movement = "decelerating"
 
         if self.firing:
@@ -190,7 +201,10 @@ class LaserSpider(pygame.sprite.Sprite):
 
     def set_velocity(self):
         """Set velocity."""
-        if self.state_of_movement == "accelerating" and self.speed < SPIDER_SPEED:
+        if (
+            self.state_of_movement == "accelerating"
+            and self.speed < SPIDER_SPEED
+        ):
             if not self.acc_tracker:
                 self.acc_tracker = self.time
 
@@ -254,6 +268,7 @@ class LaserSpider(pygame.sprite.Sprite):
         """Move system"""
         if self.autonomous and not (self.brain is None):
             move_through_deg = 0
+
             if self.move_left and self.move_right:
                 if random.randint(0, 1):
                     self.move_left = False
@@ -272,20 +287,20 @@ class LaserSpider(pygame.sprite.Sprite):
                     move_through_deg -= 45
                 elif self.move_down:
                     move_through_deg += 45
-
             elif self.move_left:
                 if self.move_up:
                     move_through_deg += 45
                 elif self.move_down:
                     move_through_deg -= 45
-
             elif self.move_up:
                 move_through_deg = 90
-
             elif self.move_down:
                 move_through_deg = -90
 
-            move_through = math.radians(move_through_deg)
+            if self.state_of_movement == "recoil":
+                move_through = self.aim_angle_rad
+            else:
+                move_through = math.radians(move_through_deg)
 
             if True in [
                 self.move_left,
@@ -322,6 +337,7 @@ class LaserSpider(pygame.sprite.Sprite):
             self.eye_aim,
             angle,
             (SPIDER_EYE_X, SPIDER_EYE_Y),
+            self.show_vision,
         )
 
     def spawn_spider(self):

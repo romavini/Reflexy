@@ -1,4 +1,7 @@
 import os
+
+import numpy as np
+from reflexy.constants import SCREEN_HEIGHT, SCREEN_WIDTH
 from typing import Tuple
 import pygame
 import math
@@ -86,7 +89,7 @@ def vision(
     vision_length: int,
     self_allies=None,
     other_has_group: bool = False,
-    color=pygame.Color("blue"),
+    color=pygame.Color("gray"),
     width=1,
     draw=True,
 ):
@@ -97,12 +100,14 @@ def vision(
         )
 
     vec_enemy_vision = []
+    vec_wall_vision = []
 
     if not (self_allies is None):
         vec_ally_vision = []
 
     for ang in range(0, 360, 10):
         local_color = color
+        local_width = width
         v_disloc = math.sin(math.radians(ang))
         h_disloc = math.cos(math.radians(ang))
 
@@ -112,29 +117,59 @@ def vision(
         )
         end_pos = (self_sprite.center[0], self_sprite.center[1])
 
-        if not (self_allies is None):
-            for ally in self_allies:
-                has_intersect = intersect_hit_box(
-                    segment_a=(start_pos, end_pos),
-                    hit_box=ally.hit_box,
-                )
-                if has_intersect and (ally.center != self_sprite.center):
-                    local_color = pygame.Color("green")
-                    vec_ally_vision.append(1)
-                else:
-                    vec_ally_vision.append(0)
+        # Wall detection
+        if (
+            start_pos[0] <= 0
+            or start_pos[0] >= SCREEN_WIDTH
+            or start_pos[1] <= 0
+            or start_pos[1] >= SCREEN_HEIGHT
+        ):
+            local_color = pygame.Color("black")
+            local_width = 2
+            vec_wall_vision.append(1)
+        else:
+            vec_wall_vision.append(0)
 
+        # Allies detection
+        if not (self_allies is None):
+            ally_detected = False
+            for ally in self_allies:
+                if ally.center != self_sprite.center:
+                    has_intersect = intersect_hit_box(
+                        segment_a=(start_pos, end_pos),
+                        hit_box=ally.hit_box,
+                    )
+
+                    if has_intersect and (ally.center != self_sprite.center):
+                        ally_detected = True
+                        break
+
+            if ally_detected:
+                local_color = pygame.Color("green")
+                local_width = 2
+                vec_ally_vision.append(1)
+            else:
+                vec_ally_vision.append(0)
+
+        # Enemy detection
         if other_has_group:
+            enemy_detect = False
             for enemy in other_sprite:
                 has_intersect = intersect_hit_box(
                     segment_a=(start_pos, end_pos),
                     hit_box=enemy.hit_box,
                 )
                 if has_intersect:
-                    local_color = pygame.Color("red")
-                    vec_enemy_vision.append(1)
-                else:
-                    vec_enemy_vision.append(0)
+                    enemy_detect = True
+                    break
+
+            if enemy_detect:
+                local_color = pygame.Color("red")
+                local_width = 2
+                vec_enemy_vision.append(1)
+            else:
+                vec_enemy_vision.append(0)
+
         else:
             has_intersect = intersect_hit_box(
                 segment_a=(start_pos, end_pos),
@@ -142,20 +177,28 @@ def vision(
             )
             if has_intersect:
                 local_color = pygame.Color("red")
+                local_width = 2
                 vec_enemy_vision.append(1)
             else:
                 vec_enemy_vision.append(0)
 
-        pygame.draw.line(
-            screen,
-            color=local_color,
-            start_pos=start_pos,
-            end_pos=end_pos,
-            width=width,
-        )
+        if draw:
+            pygame.draw.line(
+                screen,
+                color=local_color,
+                start_pos=start_pos,
+                end_pos=end_pos,
+                width=local_width,
+            )
+
     vec_vision = vec_enemy_vision
+    vec_vision.extend(vec_wall_vision)
+
     if not (self_allies is None):
         vec_vision.extend(vec_ally_vision)
+
+    vec_vision = np.array(vec_vision)
+
     return vec_vision
 
 
@@ -191,11 +234,11 @@ def aim(center_coord_1, center_coord_2, h_incre=0, v_incre=0):
         raise TypeError("Missing argument.")
     elif not (isinstance(center_coord_1, list) or isinstance(center_coord_1, tuple)):
         raise TypeError(
-            f"center_coord_1 must be list or tuple. Got {type(center_coord_1)}."
+            "center_coord_1 must be list or tuple." + f" Got {type(center_coord_1)}."
         )
     elif not (isinstance(center_coord_2, list) or isinstance(center_coord_2, tuple)):
         raise TypeError(
-            f"center_coord_2 must be list or tuple. Got {type(center_coord_2)}."
+            "center_coord_2 must be list or tuple." + f" Got {type(center_coord_2)}."
         )
 
     x_aim = int(center_coord_2[0] + h_incre - center_coord_1[0])
@@ -204,7 +247,11 @@ def aim(center_coord_1, center_coord_2, h_incre=0, v_incre=0):
     return math.atan2(y_aim, -x_aim)
 
 
-def get_surface(filename: str, angle: float = 0, scale: float = 1):
+def get_surface(
+    filename: str,
+    angle: float = 0,
+    scale: float = 1,
+) -> pygame.surface.Surface:
     """get surface given image name.
 
     Keyword arguments:
@@ -297,7 +344,8 @@ def calc_acceleration(
     """
     if not isinstance(func_acc, str):
         raise TypeError(
-            f"Acceleration function must be a string. Options: 'log', 'lin' and 'exp'. Got {type(func_acc)}."
+            "Acceleration function must be a string. Options: 'log', 'lin'"
+            + f" and 'exp'. Got {type(func_acc)}."
         )
 
     if not (
@@ -306,12 +354,14 @@ def calc_acceleration(
         and (isinstance(acceleration, float) or isinstance(acceleration, int))
     ):
         raise TypeError(
-            f"Acceleration values must be numbers. Got time:{type(time)}, tracker:{type(tracker)} and acceleration:{type(acceleration)}."
+            f"Acceleration values must be numbers. Got time: {type(time)},"
+            + f" tracker:{type(tracker)} and acceleration: "
+            + f"{type(acceleration)}."
         )
 
     if func_acc not in ["log", "lin", "exp"]:
         raise ValueError(
-            f"Acceleration functions: 'log', 'lin' and 'exp'. Got '{func_acc}'."
+            "Acceleration functions: 'log', 'lin' and 'exp'. Got" + f" '{func_acc}'."
         )
 
     elif func_acc == "log":

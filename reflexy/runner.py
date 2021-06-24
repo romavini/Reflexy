@@ -79,7 +79,7 @@ class Runner:
             raise TypeError("Missing bg_image argument.")
         elif not isinstance(bg_image, str):
             raise TypeError(
-                f"background image name must be a string. Got {type(bg_image)}."
+                "background image name must be a string." + f" Got {type(bg_image)}."
             )
 
         bg = pygame.image.load(get_image_path(bg_image))
@@ -247,10 +247,6 @@ class Runner:
         """Draw all elements on the screen."""
         self.screen.blit(self.background, (0, 0))
         self.time_game()
-        if self.autonomous:
-            ang, h_dist, v_dist = get_minor_distance(
-                self.player_group, self.enemy_group
-            )
 
         for group in [
             self.enemy_group,

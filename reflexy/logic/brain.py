@@ -1,57 +1,43 @@
 import math
+from typing import List
 import numpy as np
 
 
-class PlayerBrain:
-    def __init__(self, layers=[36, 100, 5], std=1e-4):
+class Brain:
+    def __init__(self, layers=[72, 100, 5], std=1e-1):
+        self.layers = layers
         self.params = {}
-        for i in range(1, len(layers)):
-            self.params[f"W{i}"] = std * np.random.randn(layers[i - 1], layers[i])
-            self.params[f"b{i}"] = np.zeros(layers[i])
+        self.W = []
+        self.b = []
+
+        for i in range(1, len(self.layers)):
+            self.params[f"W{i}"] = std * np.random.randn(
+                self.layers[i - 1], self.layers[i]
+            )
+            self.W.append(self.params[f"W{i}"])
+
+            self.params[f"b{i}"] = np.ones(self.layers[i])
+            self.b.append(self.params[f"b{i}"])
+
+    @staticmethod
+    def func_relu(list_in: List[float]) -> List[float]:
+        return np.array([0 if e < 0 else e for e in list_in])
+
+    @staticmethod
+    def action_ativation(out_layer: List[float]) -> List[bool]:
+        return [False if e < 0.5 else True for e in out_layer]
 
     def analyze(self, vec_vision):
+        out_layer = vec_vision.dot(self.W[0]) + self.b[0]
+        out_layer = self.func_relu(out_layer)  # ReLU
+        self.params["out_layer_1"] = out_layer
 
-        return [
-            move_left,
-            move_right,
-            move_up,
-            move_down,
-            to_attack,
-        ]
+        for i in range(1, len(self.layers) - 1):
+            local_out_layer = out_layer.dot(self.W[i]) + self.b[i]
+            out_layer = self.func_relu(local_out_layer)  # ReLU
+            self.params[f"out_layer_{i+1}"] = out_layer
 
+        return out_layer
 
-class SpiderBrain:
-    def __init__(self, layers=[72, 100, 5], std=1e-4):
-        self.params = {}
-        for i in range(1, len(layers)):
-            self.params[f"W{i}"] = std * np.random.randn(layers[i - 1], layers[i])
-            self.params[f"b{i}"] = np.zeros(layers[i])
-
-    def shot(self, enemy_angle, cooldown_ray, self_pos, enemy_pos):
-        dist = math.dist(self_pos, enemy_pos)
-        return enemy_angle
-
-    def move(self, enemy_angle, cooldown_ray):
-        return enemy_angle
-
-
-class SpiderAi:
-    def __init__(self):
-        pass
-
-    def fit(self):
-        pass
-
-    def update(self):
-        pass
-
-
-class PlayerAi:
-    def __init__(self):
-        pass
-
-    def fit(self):
-        pass
-
-    def update(self):
+    def score(self):
         pass

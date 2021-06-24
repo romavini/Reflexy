@@ -1,7 +1,6 @@
 import pygame
 from reflexy.helpers import (
     get_hit_box,
-    get_minor_distance,
     get_surface,
     calc_acceleration,
     vision,
@@ -20,7 +19,7 @@ from reflexy.constants import (
     PLAYER_DECELERATION,
     PLAYER_DECELERATION_FUNC,
 )
-from reflexy.logic.brain import PlayerBrain
+from reflexy.logic.brain import Brain
 
 
 class Player(pygame.sprite.Sprite):
@@ -42,9 +41,7 @@ class Player(pygame.sprite.Sprite):
         self.time = time
         self.autonomous = autonomous
         self.show_vision = show_vision
-
-        if self.autonomous:
-            self.brain = PlayerBrain()
+        self.brain = None
 
         self.images = [
             get_surface(filename, scale=1)
@@ -97,7 +94,7 @@ class Player(pygame.sprite.Sprite):
         self,
         time: int,
         enemy_group,
-    ):  # type: ignore
+    ):
         """Update player.
 
         Keyword arguments:
@@ -118,22 +115,27 @@ class Player(pygame.sprite.Sprite):
                 draw=self.show_vision,
             )
 
+        if self.autonomous and self.brain is None:
+            self.brain = Brain(
+                layers=[len(player_vision), 100, 5],
+            )
+
         self.time = time
         self.image = self.images[self.current_image]
 
-        self.center = (
+        self.center = [
             self.rect[0] + PLAYER_WIDTH / 2,
             self.rect[1] + PLAYER_HEIGHT / 2,
-        )
+        ]
 
-        if self.autonomous:
+        if self.autonomous and not (self.brain is None):
             [
                 self.move_left,
                 self.move_right,
                 self.move_up,
                 self.move_down,
                 to_attack,
-            ] = self.brain.analyze(vec_vision)
+            ] = self.brain.action_ativation(self.brain.analyze(player_vision))
 
             if to_attack:
                 self.attack()
@@ -190,7 +192,7 @@ class Player(pygame.sprite.Sprite):
         ):
             self.state_of_moviment = "accelerating"
 
-        if not True in [
+        if True not in [
             self.move_left,
             self.move_right,
             self.move_up,
@@ -263,10 +265,10 @@ class Player(pygame.sprite.Sprite):
             if not self.speed:
                 self.current_speed = PLAYER_SPEED
 
-            elif self.speed != PLAYER_SPEED and self.current_speed == None:
+            elif self.speed != PLAYER_SPEED and self.current_speed is None:
                 self.current_speed = self.speed
 
-            elif self.current_speed == None:
+            elif self.current_speed is None:
                 self.current_speed = PLAYER_SPEED
 
             self.speed = (
@@ -292,9 +294,9 @@ class Player(pygame.sprite.Sprite):
             if not self.acc_tracker or self.last_state_of_moviment == "accelerating":
                 self.acc_tracker = self.time
 
-            if self.speed != PLAYER_SPEED and self.current_speed == None:
+            if self.speed != PLAYER_SPEED and self.current_speed is None:
                 self.current_speed = self.speed
-            elif self.current_speed == None:
+            elif self.current_speed is None:
                 self.current_speed = PLAYER_SPEED
 
             self.speed = (

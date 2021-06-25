@@ -4,9 +4,17 @@ import numpy as np
 
 
 class Brain:
-    def __init__(self, layers=[72, 100, 5], std=1e-1):
-        self.layers = layers
+    def __init__(self, W=None, b=None, layers=None):
         self.params = {}
+        self.layers = layers
+
+        if W is None or b is None:
+            self.create_weights(layers)
+        else:
+            self.W = W
+            self.b = b
+
+    def create_weights(self, layers=[72, 100, 5], std=1e-1):
         self.W = []
         self.b = []
 

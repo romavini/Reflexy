@@ -39,6 +39,8 @@ class LaserSpider(pygame.sprite.Sprite):
         time: Optional[int],
         autonomous: bool = False,
         show_vision: bool = True,
+        W=None,
+        b=None,
     ):
         if time is None:
             raise TypeError("Missing argument.")
@@ -47,15 +49,16 @@ class LaserSpider(pygame.sprite.Sprite):
 
         pygame.sprite.Sprite.__init__(self)
 
+        self.W = W
+        self.b = b
+
         self.screen = screen
         self.time = time
         self.autonomous = autonomous
         self.show_vision = show_vision
         self.brain = None
 
-        self.images = [
-            get_surface(filename) for filename in ("laser-spider.png",)
-        ]
+        self.images = [get_surface(filename) for filename in ("laser-spider.png",)]
         self.current_image = 0
         self.image = self.images[self.current_image]
 
@@ -111,9 +114,14 @@ class LaserSpider(pygame.sprite.Sprite):
             layers = [SPIDER_VISION_CHANNELS]
             layers.extend(LAYERS)
             layers.extend([SPIDER_OUTPUTS])
-            self.brain = Brain(
-                layers=layers,
-            )
+            if not (self.W is None) and not (self.b is None):
+                self.brain = Brain(
+                    W=self.W,
+                    b=self.b,
+                    layers=layers,
+                )
+            else:
+                self.brain = Brain(layers=layers)
 
         self.time = time
         if self.autonomous and not (self.brain is None):
@@ -167,10 +175,7 @@ class LaserSpider(pygame.sprite.Sprite):
     def fire(self, player_sprite):
         if not self.firing and self.state_of_movement == "stoped":
             self.firing = True
-        elif (
-            not self.firing
-            and self.time - self.cd_tracker > COOLDOWN_SPIDER_FIRE
-        ):
+        elif not self.firing and self.time - self.cd_tracker > COOLDOWN_SPIDER_FIRE:
             self.state_of_movement = "decelerating"
 
         if self.firing:
@@ -201,10 +206,7 @@ class LaserSpider(pygame.sprite.Sprite):
 
     def set_velocity(self):
         """Set velocity."""
-        if (
-            self.state_of_movement == "accelerating"
-            and self.speed < SPIDER_SPEED
-        ):
+        if self.state_of_movement == "accelerating" and self.speed < SPIDER_SPEED:
             if not self.acc_tracker:
                 self.acc_tracker = self.time
 
@@ -342,24 +344,24 @@ class LaserSpider(pygame.sprite.Sprite):
 
     def spawn_spider(self):
         """spawn the spider sprite in a random position"""
-        axis = random.randint(0, 1)
-        side = random.randint(0, 1) if axis else random.randint(0, 1)
+        axis = ["top", "bot"][random.randint(0, 1)]
+        side = ["left", "right"][random.randint(0, 1)]
 
-        if axis:
-            if side:
+        if axis == "top":
+            if side == "left":
                 y = random.randint(0, SCREEN_HEIGHT)
                 x = -SPIDER_WIDTH
 
-            else:
+            elif side == "right":
                 y = random.randint(0, SCREEN_HEIGHT)
                 x = SCREEN_WIDTH
 
-        else:
-            if side:
+        elif axis == "bot":
+            if side == "left":
                 x = random.randint(0, SCREEN_WIDTH)
                 y = -SPIDER_HEIGHT
 
-            else:
+            elif side == "right":
                 x = random.randint(0, SCREEN_WIDTH)
                 y = SCREEN_HEIGHT
 

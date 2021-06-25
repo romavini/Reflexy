@@ -4,7 +4,7 @@ import sys
 def start():
     from reflexy.runner import Runner
 
-    runner = Runner(autonomous=False, show_vision=False)
+    runner = Runner(autonomous=False, show_vision=True, allow_restart=True)
     runner.run()
 
 

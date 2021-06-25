@@ -15,6 +15,7 @@ from reflexy.constants import (
     PLAYER_WIDTH,
     PLAYER_HEIGHT,
     COOLDOWN_PLAYER_SWORD,
+    START_HP,
     TIME_PLAYER_BLINK,
     PLAYER_ACCELERATION,
     PLAYER_ACCELERATION_FUNC,
@@ -32,6 +33,8 @@ class Player(pygame.sprite.Sprite):
         time: int,
         autonomous: bool = False,
         show_vision: bool = True,
+        W=None,
+        b=None,
     ):
         if time is None:
             raise TypeError("Missing argument.")
@@ -39,6 +42,9 @@ class Player(pygame.sprite.Sprite):
             raise TypeError(f"Timemust be float or integer. Got {type(time)}.")
 
         pygame.sprite.Sprite.__init__(self)
+
+        self.W = W
+        self.b = b
 
         self.screen = screen
         self.time = time
@@ -67,7 +73,7 @@ class Player(pygame.sprite.Sprite):
         self.set_spawn()
 
         self.mouse = pygame.mouse.get_pos()
-        self.hp = 3
+        self.hp = START_HP
         self.score = 0
 
         self.cd_attack = 0
@@ -122,9 +128,16 @@ class Player(pygame.sprite.Sprite):
             layers = [PLAYER_VISION_CHANNELS]
             layers.extend(LAYERS)
             layers.extend([PLAYER_OUTPUTS])
-            self.brain = Brain(
-                layers=layers,
-            )
+            if not (self.W is None) and not (self.b is None):
+                self.brain = Brain(
+                    W=self.W,
+                    b=self.b,
+                    layers=layers,
+                )
+            else:
+                self.brain = Brain(
+                    layers=layers,
+                )
 
         self.time = time
         self.image = self.images[self.current_image]
@@ -258,24 +271,14 @@ class Player(pygame.sprite.Sprite):
 
     def set_velocity(self):
         """Acceleration system, set the state of movement."""
-        if not (self.move_up or self.move_down) and (
-            self.move_left or self.move_right
-        ):
+        if not (self.move_up or self.move_down) and (self.move_left or self.move_right):
             self.vertical_acc = None
 
-        if not (self.move_left or self.move_right) and (
-            self.move_up or self.move_down
-        ):
+        if not (self.move_left or self.move_right) and (self.move_up or self.move_down):
             self.horizontal_acc = None
 
-        if (
-            self.state_of_moviment == "accelerating"
-            and self.speed < PLAYER_SPEED
-        ):
-            if (
-                not self.acc_tracker
-                or self.last_state_of_moviment == "decelerating"
-            ):
+        if self.state_of_moviment == "accelerating" and self.speed < PLAYER_SPEED:
+            if not self.acc_tracker or self.last_state_of_moviment == "decelerating":
                 self.acc_tracker = self.time
 
             if not self.speed:
@@ -307,10 +310,7 @@ class Player(pygame.sprite.Sprite):
             self.last_state_of_moviment = "keep"
 
         elif self.state_of_moviment == "decelerating":
-            if (
-                not self.acc_tracker
-                or self.last_state_of_moviment == "accelerating"
-            ):
+            if not self.acc_tracker or self.last_state_of_moviment == "accelerating":
                 self.acc_tracker = self.time
 
             if self.speed != PLAYER_SPEED and self.current_speed is None:
@@ -344,18 +344,14 @@ class Player(pygame.sprite.Sprite):
         if self.rect.bottom < SCREEN_HEIGHT and (
             self.move_down
             or (
-                self.state_of_moviment == "decelerating"
-                and self.vertical_acc == "down"
+                self.state_of_moviment == "decelerating" and self.vertical_acc == "down"
             )
         ):
             self.rect.top += self.speed
 
         if self.rect.top > -18 and (
             self.move_up
-            or (
-                self.state_of_moviment == "decelerating"
-                and self.vertical_acc == "up"
-            )
+            or (self.state_of_moviment == "decelerating" and self.vertical_acc == "up")
         ):
             self.rect.top -= self.speed
 

@@ -23,10 +23,22 @@ from reflexy.models.laser_spider import LaserSpider
 
 
 class Runner:
-    def __init__(self, autonomous=False, show_vision=False):
+    def __init__(
+        self,
+        autonomous=False,
+        show_vision=False,
+        allow_restart=True,
+        W_player_matrix=None,
+        b_player_matrix=None,
+        W_enemy_matrix=None,
+        b_enemy_matrix=None,
+    ):
         self.autonomous = autonomous
         self.show_vision = show_vision
+        self.W_enemy_matrix = W_enemy_matrix
+        self.b_enemy_matrix = b_enemy_matrix
         self.started = False
+
         pygame.init()
 
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -35,13 +47,15 @@ class Runner:
         self.clock = pygame.time.Clock()
         self.background = self.create_background("background-field.png")
 
-        self.time = time.time()
+        self.time_refence = time.time()
+        self.time_display = self.time_refence - self.time_refence
+        self.time = self.time_refence
         self.last_time = self.time
         self.time_game()
 
         self.text = create_pygame_font(size=FONT_SIZE, bold=True)
 
-        self.allow_restart = True
+        self.allow_restart = allow_restart
 
         self.player_group = pygame.sprite.Group()
         self.enemy_group = pygame.sprite.Group()
@@ -54,6 +68,8 @@ class Runner:
             self.time,
             self.autonomous,
             self.show_vision,
+            W_player_matrix,
+            b_player_matrix,
         )
         self.enemy_group.add(
             LaserSpider(
@@ -61,6 +77,8 @@ class Runner:
                 self.time,
                 self.autonomous,
                 self.show_vision,
+                self.W_enemy_matrix,
+                self.b_enemy_matrix,
             )
         )
         self.player_group.add(self.player)
@@ -79,7 +97,8 @@ class Runner:
             raise TypeError("Missing bg_image argument.")
         elif not isinstance(bg_image, str):
             raise TypeError(
-                "background image name must be a string." + f" Got {type(bg_image)}."
+                "background image name must be a string."
+                + f" Got {type(bg_image)}."
             )
 
         bg = pygame.image.load(get_image_path(bg_image))
@@ -94,6 +113,7 @@ class Runner:
             * CLOCK_TICK_GAME_SPEED
             / CLOCK_TICK_REFERENCE
         )
+        self.time_display = round(self.time - self.time_refence, 1)
         self.last_time = time.time()
 
     def has_collision(self) -> bool:
@@ -190,6 +210,8 @@ class Runner:
                 self.time,
                 self.autonomous,
                 self.show_vision,
+                self.W_enemy_matrix,
+                self.b_enemy_matrix,
             )
         )
 
@@ -242,6 +264,11 @@ class Runner:
             str(self.player.score),
             (SCREEN_WIDTH // 2, SCREEN_HEIGHT / 8),
         )
+        create_text(
+            self,
+            f"Time = {str(self.time_display)}",
+            (SCREEN_WIDTH - SCREEN_WIDTH // 10, SCREEN_HEIGHT / 8),
+        )
 
     def update_frame(self):
         """Draw all elements on the screen."""
@@ -261,7 +288,7 @@ class Runner:
 
         pygame.display.update()
 
-    def run(self):
+    def run(self, time=None):
         """Loop each frame of the game."""
         main_menu(self)
 
@@ -270,5 +297,11 @@ class Runner:
             self.check_events()
             self.update_frame()
             self.hp()
+
+            if not (time is None):
+                if self.time_display >= time:
+                    break
+        if self.autonomous:
+            return self.time_display, self.player.score, self.player.hp
 
         restart(self)

@@ -144,13 +144,13 @@ def vision(
         if not (self_allies is None):
             ally_detected = False
             for ally in self_allies:
-                if ally.center != self_sprite.center:
+                if ally.id != self_sprite.id:
                     has_intersect = intersect_hit_box(
                         segment_a=(start_pos, end_pos),
                         hit_box=ally.hit_box,
                     )
 
-                    if has_intersect and (ally.center != self_sprite.center):
+                    if has_intersect and (ally.id != self_sprite.id):
                         ally_detected = True
                         break
 
@@ -201,7 +201,7 @@ def vision(
 
             for enemy in other_sprite:
                 has_intersect = False
-                if not (enemy.ray is None):
+                if not (enemy.ray is None) and enemy.id != self_sprite.id:
                     has_intersect = intersect_hit_box(
                         segment_a=(start_pos, end_pos),
                         hit_box=enemy.ray.hit_box,
@@ -217,17 +217,17 @@ def vision(
                 vec_laser_vision.append(1)
             else:
                 vec_laser_vision.append(0)
-
         elif not (self_allies is None):
             ally_laser_detected = False
+
             for ally in self_allies:
-                if ally.center != self_sprite.center and not (ally.ray is None):
+                if not (ally.ray is None) and ally.id != self_sprite.id:
                     has_intersect = intersect_hit_box(
                         segment_a=(start_pos, end_pos),
                         hit_box=ally.ray.hit_box,
                     )
 
-                    if has_intersect and (ally.center != self_sprite.center):
+                    if has_intersect:
                         ally_laser_detected = True
                         break
 
@@ -269,8 +269,87 @@ def vision(
                 width=local_width,
             )
 
+    # Laser detection in Hit box
+    vec_laser_hitbox_vision = []
+
+    # Player hitbox
+    if other_has_group:
+        laser_detect = False
+
+        for enemy in other_sprite:
+            has_intersect = False
+            if not (enemy.ray is None) and enemy.id != self_sprite.id:
+                has_intersect = intersect_hit_box(
+                    segment_a=enemy.ray.hit_box[0],
+                    hit_box=self_sprite.hit_box,
+                )
+
+            if has_intersect:
+                laser_detect = True
+
+        if laser_detect:
+            vec_laser_hitbox_vision.append(1)
+            draw_box(
+                screen,
+                self_sprite,
+                color=pygame.Color("blue"),
+            )
+        else:
+            vec_laser_hitbox_vision.append(0)
+
+    # Spider hitbox
+    elif not (self_allies is None):
+        ally_laser_detected = False
+
+        for ally in self_allies:
+            if ally.center != self_sprite.center and not (ally.ray is None):
+                has_intersect = intersect_hit_box(
+                    segment_a=ally.ray.hit_box[0],
+                    hit_box=self_sprite.hit_box,
+                )
+
+                if has_intersect and (ally.center != self_sprite.center):
+                    ally_laser_detected = True
+
+        if ally_laser_detected:
+            vec_laser_hitbox_vision.append(1)
+            draw_box(
+                screen,
+                self_sprite,
+                color=pygame.Color("blue"),
+            )
+        else:
+            vec_laser_hitbox_vision.append(0)
+
+    # Spider hitbox
+    else:
+        laser_detect = False
+
+        try:
+            has_intersect = False
+
+            if not (other_sprite.ray is None):
+                has_intersect = intersect_hit_box(
+                    segment_a=other_sprite.ray.hit_box[0],
+                    hit_box=self_sprite.hit_box,
+                )
+
+        except AttributeError:
+            pass
+
+        if has_intersect:
+            vec_laser_hitbox_vision.append(1)
+            draw_box(
+                screen,
+                self_sprite,
+                color=pygame.Color("blue"),
+            )
+        else:
+            vec_laser_hitbox_vision.append(0)
+
     vec_vision = vec_enemy_vision
     vec_vision.extend(vec_laser_vision)
+    vec_vision.extend(vec_laser_hitbox_vision)
     vec_vision.extend(vec_wall_vision)
 
     if not (self_allies is None):
@@ -311,13 +390,19 @@ def aim(center_coord_1, center_coord_2, h_incre=0, v_incre=0):
     """
     if center_coord_1 is None or center_coord_2 is None:
         raise TypeError("Missing argument.")
-    elif not (isinstance(center_coord_1, list) or isinstance(center_coord_1, tuple)):
+    elif not (
+        isinstance(center_coord_1, list) or isinstance(center_coord_1, tuple)
+    ):
         raise TypeError(
-            "center_coord_1 must be list or tuple." + f" Got {type(center_coord_1)}."
+            "center_coord_1 must be list or tuple."
+            + f" Got {type(center_coord_1)}."
         )
-    elif not (isinstance(center_coord_2, list) or isinstance(center_coord_2, tuple)):
+    elif not (
+        isinstance(center_coord_2, list) or isinstance(center_coord_2, tuple)
+    ):
         raise TypeError(
-            "center_coord_2 must be list or tuple." + f" Got {type(center_coord_2)}."
+            "center_coord_2 must be list or tuple."
+            + f" Got {type(center_coord_2)}."
         )
 
     x_aim = int(center_coord_2[0] + h_incre - center_coord_1[0])
@@ -345,10 +430,14 @@ def get_surface(
         raise TypeError(f"Image name must be a string. Got {type(filename)}.")
 
     elif not (isinstance(angle, float) or isinstance(angle, int)):
-        raise TypeError(f"Angle must be an float or integer. Got {type(angle)}.")
+        raise TypeError(
+            f"Angle must be an float or integer. Got {type(angle)}."
+        )
 
     elif not (isinstance(scale, float) or isinstance(scale, int)):
-        raise TypeError(f"Scale must be an float or integer. Got {type(scale)}.")
+        raise TypeError(
+            f"Scale must be an float or integer. Got {type(scale)}."
+        )
 
     return pygame.transform.rotozoom(
         pygame.image.load(get_image_path(filename)).convert_alpha(),
@@ -366,7 +455,9 @@ def get_image_path(filename: str, folder: str = "../images") -> str:
     if not filename:
         raise TypeError("Missing filename argument.")
 
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), folder, filename))
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), folder, filename)
+    )
 
 
 def create_pygame_font(
@@ -440,7 +531,8 @@ def calc_acceleration(
 
     if func_acc not in ["log", "lin", "exp"]:
         raise ValueError(
-            "Acceleration functions: 'log', 'lin' and 'exp'. Got" + f" '{func_acc}'."
+            "Acceleration functions: 'log', 'lin' and 'exp'. Got"
+            + f" '{func_acc}'."
         )
 
     elif func_acc == "log":

@@ -64,6 +64,7 @@ class LaserSpider(pygame.sprite.Sprite):
         self.current_image = 0
         self.image = self.images[self.current_image]
 
+        self.id = str(int(random.randint(1, 10000000)))
         self.spawn_spider()
         self.eye_aim = (self.rect[0], self.rect[1])
 
@@ -133,7 +134,7 @@ class LaserSpider(pygame.sprite.Sprite):
                 self.move_up,
                 self.move_down,
                 self.to_fire,
-                self.to_angle,
+                to_angle,
             ] = self.brain.analyze(spider_vision)
 
             [
@@ -151,6 +152,9 @@ class LaserSpider(pygame.sprite.Sprite):
                     self.to_fire,
                 ]
             )
+
+            self.to_angle = self.angle2_pi_minus_pi(to_angle)
+
             if not self.state_of_movement == "recoil":
                 self.aim_angle_rad = self.to_angle
 
@@ -326,6 +330,7 @@ class LaserSpider(pygame.sprite.Sprite):
             self.rect[0] += round(math.cos(move_through) * self.speed)
             self.rect[1] -= round(math.sin(move_through) * self.speed)
 
+        # Boundaries
         if self.rect[0] < -SPIDER_WIDTH:
             self.rect[0] = -SPIDER_WIDTH
         elif self.rect[0] > SCREEN_WIDTH + SPIDER_WIDTH:
@@ -341,6 +346,20 @@ class LaserSpider(pygame.sprite.Sprite):
             self.rect[1] + SPIDER_HEIGHT / 2,
         )
 
+    @staticmethod
+    def angle2_pi_minus_pi(angle):
+        angle_deg = math.degrees(angle)
+
+        if angle_deg < 360:
+            if angle_deg > 180:
+                angle_deg = angle_deg - 360
+        else:
+            while (angle_deg + 360) // 360 >= 1 and angle_deg > 180:
+                if angle_deg > 180:
+                    angle_deg = angle_deg - 360
+
+        return math.radians(angle_deg)
+
     def call_ray(self, screen: pygame.Surface, player_sprite):
         """Shoot laser.
 
@@ -354,6 +373,7 @@ class LaserSpider(pygame.sprite.Sprite):
             self.eye_aim,
             angle,
             (SPIDER_EYE_X, SPIDER_EYE_Y),
+            self.id,
             self.show_vision,
         )
 

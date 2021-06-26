@@ -3,13 +3,14 @@ import sys
 import time
 from reflexy.menus import main_menu, restart
 from reflexy.constants import (
+    MAX_SPAWN_SPIDER,
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
     CAPTION,
     CLOCK_TICK_GAME_SPEED,
     CLOCK_TICK_REFERENCE,
     FONT_SIZE,
-    SPAWN_SPIDER,
+    TIME_SPAWN_SPIDER,
     COOLDOWN_PLAYER_IMMUNE,
 )
 from reflexy.helpers import (
@@ -38,6 +39,7 @@ class Runner:
         self.W_enemy_matrix = W_enemy_matrix
         self.b_enemy_matrix = b_enemy_matrix
         self.started = False
+        self.exit = False
 
         pygame.init()
 
@@ -105,6 +107,10 @@ class Runner:
 
         return pygame.transform.scale(bg, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
+    def exit_game(self):
+        pygame.quit()
+        sys.exit()
+
     def time_game(self):
         """Clock of the game."""
         self.time = (
@@ -135,13 +141,12 @@ class Runner:
         [
             self.kill_spider(sprite)
             for sprite in self.enemy_group.sprites()
-            if pygame.sprite.spritecollide(
+            for laser in self.laser_hit_group
+            if pygame.sprite.collide_mask(
                 sprite,
-                self.laser_hit_group,
-                False,
-                pygame.sprite.collide_mask,  # type: ignore
+                laser,
             )
-            and not sprite.ray
+            and sprite.id != laser.id
         ]
 
         bool_collision = bool(
@@ -230,7 +235,10 @@ class Runner:
 
     def check_events(self):
         """Check game events in each frame."""
-        if self.time - self.cd_spawn_spider > SPAWN_SPIDER:
+        if (
+            self.time - self.cd_spawn_spider > TIME_SPAWN_SPIDER
+            and len(self.enemy_group) <= MAX_SPAWN_SPIDER
+        ):
             self.respawn_spider()
             self.cd_spawn_spider = self.time
 
@@ -244,8 +252,10 @@ class Runner:
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    sys.exit()
+                    if self.autonomous:
+                        self.exit = True
+                    else:
+                        self.exit_game()
 
                 if event.key == pygame.K_SPACE:
                     self.player.attack()
@@ -262,15 +272,28 @@ class Runner:
         create_text(
             self,
             str(self.player.score),
-            (SCREEN_WIDTH // 2, SCREEN_HEIGHT / 8),
+            (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 8),
         )
         create_text(
             self,
             f"Time = {str(self.time_display)}",
-            (SCREEN_WIDTH - SCREEN_WIDTH // 10, SCREEN_HEIGHT / 8),
+            (SCREEN_WIDTH - SCREEN_WIDTH // 10, SCREEN_HEIGHT // 8),
         )
 
-    def update_frame(self):
+    def update_generation(self, generation, pop, max_pop):
+        create_text(
+            self,
+            "Geneation = " + str(generation + 1),
+            (SCREEN_WIDTH - SCREEN_WIDTH // 8, SCREEN_HEIGHT // 8 * 2),
+        )
+
+        create_text(
+            self,
+            f"Pop = {str(pop + 1)}/{max_pop}",
+            (SCREEN_WIDTH - SCREEN_WIDTH // 10, SCREEN_HEIGHT // 8 * 3),
+        )
+
+    def update_frame(self, generation, pop, max_pop):
         """Draw all elements on the screen."""
         self.screen.blit(self.background, (0, 0))
         self.time_game()
@@ -285,23 +308,34 @@ class Runner:
         self.enemy_group.update(self.time, self.player, self.enemy_group)
         self.player_group.update(self.time, self.enemy_group)
         self.update_score_lives()
+        if not (generation is None):
+            self.update_generation(generation, pop, max_pop)
 
         pygame.display.update()
 
-    def run(self, time=None):
+    def run(self, time=None, generation=None, pop=None, max_pop=None):
         """Loop each frame of the game."""
         main_menu(self)
 
         while self.player.hp > 0:
             self.clock.tick(CLOCK_TICK_GAME_SPEED)
             self.check_events()
-            self.update_frame()
+            self.update_frame(generation, pop, max_pop)
             self.hp()
+
+            if self.exit:
+                break
 
             if not (time is None):
                 if self.time_display >= time:
                     break
+
         if self.autonomous:
-            return self.time_display, self.player.score, self.player.hp
+            return (
+                self.time_display,
+                self.player.score,
+                self.player.hp,
+                self.exit,
+            )
 
         restart(self)

@@ -16,6 +16,7 @@ class Ray(pygame.sprite.Sprite):
         correct_spider_eye,
         aim_angle,
         eye_position,
+        id,
         show_vision: bool = True,
     ):
         pygame.sprite.Sprite.__init__(self)
@@ -24,6 +25,7 @@ class Ray(pygame.sprite.Sprite):
         self.current_angle = aim_angle
         self.correct_spider_eye = correct_spider_eye
         self.eye_position = eye_position
+        self.id = id
 
         self.images = [
             self.get_surface(filename, self.current_angle)

@@ -1,3 +1,4 @@
+from typing import Any
 import pygame
 from reflexy.helpers import (
     get_hit_box,
@@ -103,7 +104,7 @@ class Player(pygame.sprite.Sprite):
     def update(
         self,
         time: int,
-        enemy_group,
+        enemy_group: Any,
     ):
         """Update player.
 
@@ -134,10 +135,12 @@ class Player(pygame.sprite.Sprite):
                     W=self.W,
                     b=self.b,
                     layers=layers,
+                    read=None,
                 )
             else:
                 self.brain = Brain(
                     layers=layers,
+                    read=None,
                 )
 
         self.time = time

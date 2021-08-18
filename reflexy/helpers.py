@@ -1,3 +1,4 @@
+import json
 import os
 
 import numpy as np
@@ -409,6 +410,25 @@ def aim(center_coord_1, center_coord_2, h_incre=0, v_incre=0):
     y_aim = int(center_coord_2[1] + v_incre - center_coord_1[1])
 
     return math.atan2(y_aim, -x_aim)
+
+
+def read_weights(read, local_dir="reflexy/logic/"):
+    files = os.listdir(os.path.join(local_dir, "params/"))
+
+    with open(f"{os.path.join(local_dir, 'params', files[0])}", "r") as f:
+        obj = f.read()
+
+    dict_weights = json.loads(obj)
+
+    print(f"{dict_weights.keys()=}")
+    if read == "player":
+        W = np.array(dict_weights["last_player_weights"], dtype=object)
+        b = np.array(dict_weights["last_player_bias"], dtype=object)
+    elif read == "enemy":
+        W = np.array(dict_weights["last_enemy_weights"], dtype=object)
+        b = np.array(dict_weights["last_enemy_bias"], dtype=object)
+
+    return W, b
 
 
 def get_surface(

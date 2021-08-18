@@ -1,12 +1,20 @@
 import math
+from reflexy.helpers import read_weights
 from typing import List
 import numpy as np
 
 
 class Brain:
-    def __init__(self, W=None, b=None, layers=None):
+    def __init__(self, W=None, b=None, layers=None, read=None):
+        """
+
+        read -- 'enemy' or 'player' (default None)
+        """
         self.params = {}
         self.layers = layers
+
+        if not (read is None):
+            self.W, self.b = read_weights(read)
 
         if W is None or b is None:
             self.create_weights(layers)

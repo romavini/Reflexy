@@ -21,11 +21,18 @@ class NumpyArrayEncoder(JSONEncoder):
 
 
 class GeneticAlgorithm:
-    def __init__(self, max_geration=100, population=10, std=1e-1):
+    def __init__(self, elem="both", max_geration=100, population=30, std=1e-1):
         self.std = std
         self.time_per_simulatiron = 30
-        self.player_score = None
-        self.enemy_score = None
+        self.local_dir = "reflexy/logic/"
+
+        if elem == "both":
+            self.player_score = None
+            self.enemy_score = None
+        elif elem == "player":
+            self.player_score = None
+        elif elem == "enemy":
+            self.enemy_score = None
 
         if population < 4:
             self.population = 4
@@ -60,7 +67,7 @@ class GeneticAlgorithm:
             self.W_player, self.W_enemy = self.mutation(
                 p_weights,
                 e_weights,
-                1e-4,
+                1e-6,
             )
 
         self.save_last_generation(max_geration)
@@ -89,7 +96,7 @@ class GeneticAlgorithm:
         saving_params["last_enemy_bias"] = self.last_enemy_bias
 
         with open(
-            f"reflexy/logic/params/G{self.last_generation+1}_"
+            f"{self.local_dir}params/G{self.last_generation+1}_"
             f"playerScore{str(best_player_score).replace('.',',')}_"
             f"enemyScore{str(best_enemy_score).replace('.',',')}.json",
             "w",

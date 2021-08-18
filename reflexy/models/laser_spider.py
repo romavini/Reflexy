@@ -118,13 +118,9 @@ class LaserSpider(pygame.sprite.Sprite):
             layers.extend(LAYERS)
             layers.extend([SPIDER_OUTPUTS])
             if not (self.W is None) and not (self.b is None):
-                self.brain = Brain(
-                    W=self.W,
-                    b=self.b,
-                    layers=layers,
-                )
+                self.brain = Brain(W=self.W, b=self.b, layers=layers, read=None)
             else:
-                self.brain = Brain(layers=layers)
+                self.brain = Brain(layers=layers, read=None)
 
         self.time = time
         if self.autonomous and not (self.brain is None):

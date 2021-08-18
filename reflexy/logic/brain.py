@@ -1,35 +1,59 @@
 import math
+from reflexy.helpers import read_weights
+from typing import List
+import numpy as np
 
 
-class SpiderBrain:
-    def __init__(self):
-        pass
+class Brain:
+    def __init__(self, W=None, b=None, layers=None, read=None):
+        """
 
-    def shot(self, enemy_angle, cooldown_ray, self_pos, enemy_pos):
-        dist = math.dist(self_pos, enemy_pos)
-        return enemy_angle
+        read -- 'enemy' or 'player' (default None)
+        """
+        self.params = {}
+        self.layers = layers
 
-    def move(self, enemy_angle, cooldown_ray):
-        return enemy_angle
+        if not (read is None):
+            self.W, self.b = read_weights(read)
 
+        if W is None or b is None:
+            self.create_weights(layers)
+        else:
+            self.W = W
+            self.b = b
 
-class SpiderAi:
-    def __init__(self):
-        pass
+    def create_weights(self, layers=[72, 100, 5], std=1e-1):
+        self.W = []
+        self.b = []
 
-    def fit(self):
-        pass
+        for i in range(1, len(self.layers)):
+            self.params[f"W{i}"] = std * np.random.randn(
+                self.layers[i - 1], self.layers[i]
+            )
+            self.W.append(self.params[f"W{i}"])
 
-    def update(self):
-        pass
+            self.params[f"b{i}"] = np.ones(self.layers[i])
+            self.b.append(self.params[f"b{i}"])
 
+    @staticmethod
+    def func_relu(list_in: List[float]) -> List[float]:
+        return np.array([0 if e < 0 else e for e in list_in])
 
-class PlayerAi:
-    def __init__(self):
-        pass
+    @staticmethod
+    def action_ativation(out_layer: List[float]) -> List[bool]:
+        return [False if e < 0.5 else True for e in out_layer]
 
-    def fit(self):
-        pass
+    def analyze(self, vec_vision):
+        out_layer = vec_vision.dot(self.W[0]) + self.b[0]
+        out_layer = self.func_relu(out_layer)  # ReLU
+        self.params["out_layer_1"] = out_layer
 
-    def update(self):
+        for i in range(1, len(self.layers) - 1):
+            local_out_layer = out_layer.dot(self.W[i]) + self.b[i]
+            out_layer = self.func_relu(local_out_layer)  # ReLU
+            self.params[f"out_layer_{i+1}"] = out_layer
+
+        return out_layer
+
+    def score(self):
         pass

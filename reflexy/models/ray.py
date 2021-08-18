@@ -28,7 +28,7 @@ class Ray(pygame.sprite.Sprite):
         self.id = id
 
         self.images = [
-            self.get_surface(filename, self.current_angle)
+            get_surface(filename, angle=self.current_angle)
             for filename in (
                 [
                     "ray-0.png",
@@ -53,7 +53,7 @@ class Ray(pygame.sprite.Sprite):
         self.image = self.images[self.current_image]
 
         self.correct_ray_to_eye()
-        self.origin_position = (self.rect[0], self.rect[1])
+        self.origin_position: Sequence[int] = (self.rect[0], self.rect[1])
 
         self.hit_box = [self.hit_line()]
         if self.show_vision:
@@ -96,6 +96,7 @@ class Ray(pygame.sprite.Sprite):
         return (point_start, point_end)
 
     def correct_ray_to_eye(self):
+        """Adjust the laser into the spider."""
         size_ray_ratated = pygame.Surface.get_size(self.image)
         B = abs(math.sin(math.radians(-self.current_angle))) * RAY_HEIGHT
         h = math.sqrt((RAY_HEIGHT) ** 2 - (B) ** 2) / 2

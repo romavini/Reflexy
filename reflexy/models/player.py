@@ -358,11 +358,12 @@ class Player(pygame.sprite.Sprite):
 
     def move_player(self):
         """Movement system."""
-        if self.rect.bottom < (SCREEN_HEIGHT + PLAYER_HEIGHT // 2) and (
-            self.move_down
-            or (
-                self.state_of_moviment == "decelerating"
-                and self.vertical_acc == "down"
+        if (
+            self.rect.bottom < (SCREEN_HEIGHT + PLAYER_HEIGHT // 2) and (
+                self.move_down or (
+                    self.state_of_moviment == "decelerating"
+                    and self.vertical_acc == "down"
+                )
             )
         ):
             self.rect.top += self.speed

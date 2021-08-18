@@ -1,6 +1,6 @@
 import math
 import pygame
-from reflexy.helpers import draw_box, get_image_path
+from reflexy.helpers import draw_box, get_image_path, get_surface
 from reflexy.constants import (
     RAY_WIDTH,
     RAY_HEIGHT,
@@ -85,12 +85,8 @@ class Ray(pygame.sprite.Sprite):
         ]
 
         point_end = [
-            int(
-                point_start[0] + math.cos(math.radians(self.current_angle)) * RAY_WIDTH
-            ),
-            int(
-                point_start[1] - math.sin(math.radians(self.current_angle)) * RAY_WIDTH
-            ),
+            int(point_start[0] + math.cos(math.radians(self.current_angle)) * RAY_WIDTH),
+            int(point_start[1] - math.sin(math.radians(self.current_angle)) * RAY_WIDTH),
         ]
 
         return (point_start, point_end)
@@ -162,10 +158,3 @@ class Ray(pygame.sprite.Sprite):
             )
 
         self.rect = pygame.Rect(x, y, RAY_WIDTH, RAY_HEIGHT)
-
-    def get_surface(self, filename, angle=0, scale=1):
-        return pygame.transform.rotozoom(
-            pygame.image.load(get_image_path(filename)).convert_alpha(),
-            angle,
-            scale,
-        )

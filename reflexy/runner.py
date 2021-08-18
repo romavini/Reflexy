@@ -99,8 +99,7 @@ class Runner:
             raise TypeError("Missing bg_image argument.")
         elif not isinstance(bg_image, str):
             raise TypeError(
-                "background image name must be a string."
-                + f" Got {type(bg_image)}."
+                "background image name must be a string." + f" Got {type(bg_image)}."
             )
 
         bg = pygame.image.load(get_image_path(bg_image))

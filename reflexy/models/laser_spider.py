@@ -58,9 +58,7 @@ class LaserSpider(pygame.sprite.Sprite):
         self.show_vision = show_vision
         self.brain = None
 
-        self.images = [
-            get_surface(filename) for filename in ("laser-spider.png",)
-        ]
+        self.images = [get_surface(filename) for filename in ("laser-spider.png",)]
         self.current_image = 0
         self.image = self.images[self.current_image]
 
@@ -177,10 +175,7 @@ class LaserSpider(pygame.sprite.Sprite):
     def fire(self, player_sprite):
         if not self.firing and self.state_of_movement == "stoped":
             self.firing = True
-        elif (
-            not self.firing
-            and self.time - self.cd_tracker > COOLDOWN_SPIDER_FIRE
-        ):
+        elif not self.firing and self.time - self.cd_tracker > COOLDOWN_SPIDER_FIRE:
             self.state_of_movement = "decelerating"
 
         if self.firing:
@@ -211,10 +206,7 @@ class LaserSpider(pygame.sprite.Sprite):
 
     def set_velocity(self):
         """Set velocity."""
-        if (
-            self.state_of_movement == "accelerating"
-            and self.speed < SPIDER_SPEED
-        ):
+        if self.state_of_movement == "accelerating" and self.speed < SPIDER_SPEED:
             if not self.acc_tracker:
                 self.acc_tracker = self.time
 

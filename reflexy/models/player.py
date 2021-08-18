@@ -275,24 +275,14 @@ class Player(pygame.sprite.Sprite):
 
     def set_velocity(self):
         """Acceleration system, set the state of movement."""
-        if not (self.move_up or self.move_down) and (
-            self.move_left or self.move_right
-        ):
+        if not (self.move_up or self.move_down) and (self.move_left or self.move_right):
             self.vertical_acc = None
 
-        if not (self.move_left or self.move_right) and (
-            self.move_up or self.move_down
-        ):
+        if not (self.move_left or self.move_right) and (self.move_up or self.move_down):
             self.horizontal_acc = None
 
-        if (
-            self.state_of_moviment == "accelerating"
-            and self.speed < PLAYER_SPEED
-        ):
-            if (
-                not self.acc_tracker
-                or self.last_state_of_moviment == "decelerating"
-            ):
+        if self.state_of_moviment == "accelerating" and self.speed < PLAYER_SPEED:
+            if not self.acc_tracker or self.last_state_of_moviment == "decelerating":
                 self.acc_tracker = self.time
 
             if not self.speed:
@@ -324,10 +314,7 @@ class Player(pygame.sprite.Sprite):
             self.last_state_of_moviment = "keep"
 
         elif self.state_of_moviment == "decelerating":
-            if (
-                not self.acc_tracker
-                or self.last_state_of_moviment == "accelerating"
-            ):
+            if not self.acc_tracker or self.last_state_of_moviment == "accelerating":
                 self.acc_tracker = self.time
 
             if self.speed != PLAYER_SPEED and self.current_speed is None:
@@ -358,30 +345,22 @@ class Player(pygame.sprite.Sprite):
 
     def move_player(self):
         """Movement system."""
-        if (
-            self.rect.bottom < (SCREEN_HEIGHT + PLAYER_HEIGHT // 2) and (
-                self.move_down or (
-                    self.state_of_moviment == "decelerating"
-                    and self.vertical_acc == "down"
-                )
-            )
+        if self.rect.bottom < (SCREEN_HEIGHT + PLAYER_HEIGHT // 2) and (
+            self.move_down
+            or (self.state_of_moviment == "decelerating" and self.vertical_acc == "down")
         ):
             self.rect.top += self.speed
 
         if (self.rect.top > 0 - PLAYER_WIDTH // 2) and (
             self.move_up
-            or (
-                self.state_of_moviment == "decelerating"
-                and self.vertical_acc == "up"
-            )
+            or (self.state_of_moviment == "decelerating" and self.vertical_acc == "up")
         ):
             self.rect.top -= self.speed
 
         if (self.rect.left > 0 - PLAYER_WIDTH // 2) and (
             self.move_left
             or (
-                self.state_of_moviment == "decelerating"
-                and self.horizontal_acc == "left"
+                self.state_of_moviment == "decelerating" and self.horizontal_acc == "left"
             )
         ):
             self.rect.left -= self.speed

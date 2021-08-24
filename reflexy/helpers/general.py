@@ -2,6 +2,7 @@ import json
 import os
 import numpy as np
 from reflexy.constants import SCREEN_HEIGHT, SCREEN_WIDTH
+from reflexy.helpers.math import segments_intersect, get_relative_distance_point
 from typing import Tuple
 import pygame
 import math
@@ -72,15 +73,7 @@ def draw_box(
     color=pygame.Color("green"),
     width=2,
 ):
-    # if len(self_sprite.hit_box) == 2:
-    #     pygame.draw.line(
-    #         screen,
-    #         color=color,
-    #         start_pos=self_sprite.hit_box[0],
-    #         end_pos=self_sprite.hit_box[1],
-    #         width=2,
-    #     )
-    # else:
+    """"""
     for [box_start_side_point, box_end_side_point] in self_sprite.hit_box:
         pygame.draw.line(
             screen,
@@ -102,6 +95,7 @@ def vision(
     width=1,
     draw=True,
 ):
+    """"""
     if draw:
         draw_box(
             screen,
@@ -122,8 +116,8 @@ def vision(
         h_disloc = math.cos(math.radians(ang))
 
         start_pos = (
-            self_sprite.center[0] - v_disloc * vision_length,
-            self_sprite.center[1] + h_disloc * vision_length,
+            int(self_sprite.center[0] - v_disloc * vision_length),
+            int(self_sprite.center[1] + h_disloc * vision_length),
         )
         end_pos = (self_sprite.center[0], self_sprite.center[1])
 
@@ -136,7 +130,31 @@ def vision(
         ):
             local_color = pygame.Color("black")
             local_width = 2
-            vec_wall_vision.append(1)
+
+            if start_pos[0] <= 0:
+                start_pos = segments_intersect(
+                    [start_pos, end_pos],
+                    [[0, 0], [0, SCREEN_HEIGHT]],
+                )
+            elif start_pos[0] >= SCREEN_WIDTH:
+                start_pos = segments_intersect(
+                    [start_pos, end_pos],
+                    [[SCREEN_WIDTH, 0], [SCREEN_WIDTH, SCREEN_HEIGHT]],
+                )
+            elif start_pos[1] <= 0:
+                start_pos = segments_intersect(
+                    [start_pos, end_pos],
+                    [[0, 0], [SCREEN_WIDTH, 0]],
+                )
+            elif start_pos[1] >= SCREEN_HEIGHT:
+                start_pos = segments_intersect(
+                    [start_pos, end_pos],
+                    [[0, SCREEN_HEIGHT], [SCREEN_WIDTH, SCREEN_HEIGHT]],
+                )
+
+            vec_wall_vision.append(
+                get_relative_distance_point(start_pos, end_pos, vision_length)
+            )
         else:
             vec_wall_vision.append(0)
 
@@ -368,7 +386,6 @@ def read_weights(read, local_dir="reflexy/logic/"):
 
     dict_weights = json.loads(obj)
 
-    print(f"{dict_weights.keys()=}")
     if read == "player":
         W = np.array(dict_weights["last_player_weights"], dtype=object)
         b = np.array(dict_weights["last_player_bias"], dtype=object)

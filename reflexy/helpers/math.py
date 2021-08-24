@@ -1,6 +1,42 @@
 import math
 
 
+def segments_intersect(segment_self, segment_target):
+    """Return the point of irtercet of two segments.
+
+    Keyword arguments:
+    two sets of segments
+    """
+
+    def line(segment):
+        p1, p2 = segment
+        A = p1[1] - p2[1]
+        B = p2[0] - p1[0]
+        C = p1[0] * p2[1] - p2[0] * p1[1]
+        return A, B, -C
+
+    def intersection(L1, L2):
+        D = L1[0] * L2[1] - L1[1] * L2[0]
+        Dx = L1[2] * L2[1] - L1[1] * L2[2]
+        Dy = L1[0] * L2[2] - L1[2] * L2[0]
+        if D != 0:
+            x = int(Dx / D)
+            y = int(Dy / D)
+            return x, y
+        else:
+            return False
+
+    L1 = line(segment_self)
+    L2 = line(segment_target)
+
+    R = intersection(L1, L2)
+
+    if not R:
+        return segment_self[0]
+
+    return R
+
+
 def angle2_pi_minus_pi(angle):
     angle_deg = math.degrees(angle)
 
@@ -15,23 +51,17 @@ def angle2_pi_minus_pi(angle):
     return math.radians(angle_deg)
 
 
-def get_minor_distance(player_rect, enemy_group):
-    p_x, p_y = player_rect
+def get_relative_distance_point(start_point, final_point, defaul_value):
+    """Return a float value to distance."""
+    s_x, s_y = start_point
+    e_x, e_y = final_point
 
-    minor_dist = 100_000_000
-    for enemy in enemy_group:
-        e_x, e_y = enemy.rect[0:2]
-        h_dist = p_x - e_x
-        v_dist = p_y - e_y
-        if minor_dist > math.sqrt(h_dist ^ 2 + v_dist ^ 2):
-            h_minor_dist = h_dist
-            v_minor_dist = v_dist
-            e_minor_x = e_x
-            e_minor_y = e_y
+    h_dist = round(s_x - e_x)
+    v_dist = round(s_y - e_y)
+    value = math.sqrt(h_dist ** 2 + v_dist ** 2) / defaul_value
+    value = 0 if value < 0 else 1 if value > 1 else round(value, 3)
 
-    ang = aim(player_rect, [e_minor_x, e_minor_y])
-
-    return ang, h_minor_dist, v_minor_dist
+    return value
 
 
 def aim(center_coord_1, center_coord_2, h_incre=0, v_incre=0):

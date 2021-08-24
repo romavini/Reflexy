@@ -182,16 +182,16 @@ def vision(
         # Enemy detection
         if other_has_group:
             enemy_detect = False
+            enemies_in_sight = []
 
             for enemy in other_sprite:
                 has_intersect = intersect_hit_box(
                     segment_a=(start_pos, end_pos),
                     hit_box=enemy.hit_box,
                 )
-
                 if has_intersect:
                     enemy_detect = True
-                    break
+                    enemies_in_sight.append(enemy)
 
             if enemy_detect:
                 local_color = pygame.Color("red")

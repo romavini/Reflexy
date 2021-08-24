@@ -77,7 +77,7 @@ class Runner:
                 self.screen,
                 self.time,
                 self.autonomous,
-                self.show_vision,
+                False,
                 self.W_enemy_matrix,
                 self.b_enemy_matrix,
             )
@@ -212,7 +212,7 @@ class Runner:
                 self.screen,
                 self.time,
                 self.autonomous,
-                self.show_vision,
+                False,
                 self.W_enemy_matrix,
                 self.b_enemy_matrix,
             )

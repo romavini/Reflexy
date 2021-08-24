@@ -156,10 +156,7 @@ class GeneticAlgorithm:
 
     def get_enemy_score(self, time, player_score, player_lost_hp):
         return round(
-            time
-            - self.time_per_simulatiron
-            + player_score * 10
-            + player_lost_hp,
+            time - self.time_per_simulatiron + player_score * 10 + player_lost_hp,
             2,
         )
 
@@ -189,9 +186,7 @@ class GeneticAlgorithm:
                 self.save_last_generation(generation)
                 runner.exit_game()
 
-            local_player_score[pop] = self.get_player_score(
-                time, player_score, player_hp
-            )
+            local_player_score[pop] = self.get_player_score(time, player_score, player_hp)
             local_enemy_score[pop] = self.get_enemy_score(
                 time, player_score, START_HP - player_hp
             )
@@ -200,13 +195,10 @@ class GeneticAlgorithm:
             self.player_score = local_player_score
             self.enemy_score = local_enemy_score
         else:
-            self.player_score = np.vstack(
-                (self.player_score, local_player_score)
-            )
+            self.player_score = np.vstack((self.player_score, local_player_score))
             self.enemy_score = np.vstack((self.enemy_score, local_enemy_score))
 
     def selection(self, generation):
-
         if len(np.shape(self.player_score)) == 1:
             p_idx_sorted = np.argsort(self.player_score)
             e_idx_sorted = np.argsort(self.enemy_score)
@@ -246,9 +238,7 @@ class GeneticAlgorithm:
                 i_other = i
 
                 while i_other == i:
-                    i_other = random.randint(
-                        0, self.population - np.shape(weights)[0]
-                    )
+                    i_other = random.randint(0, self.population - np.shape(weights)[0])
 
                 new_weight_list = []
 
@@ -257,9 +247,7 @@ class GeneticAlgorithm:
                     cross_over = ["lines", "columns"][random.randint(0, 1)]
 
                     if cross_over == "lines":
-                        cross_point = random.randint(
-                            1, np.shape(weights[i][layer])[0]
-                        )
+                        cross_point = random.randint(1, np.shape(weights[i][layer])[0])
 
                         local_new_weight = np.vstack(
                             (
@@ -312,9 +300,7 @@ class GeneticAlgorithm:
 
                 for layer in range(np.shape(weights)[1]):
                     shape = np.shape(weights[i][layer])
-                    mutation.append(
-                        np.random.randn(shape[0], shape[1]) * mutation_ratio
-                    )
+                    mutation.append(np.random.randn(shape[0], shape[1]) * mutation_ratio)
 
                 if weight_mutation is None:
                     weight_mutation = np.array(mutation, dtype=object)

@@ -1,5 +1,4 @@
-import math
-from reflexy.helpers import read_weights
+from reflexy.helpers.general import read_weights
 from typing import List
 import numpy as np
 

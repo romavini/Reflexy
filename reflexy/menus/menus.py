@@ -1,6 +1,6 @@
 import sys
 import pygame
-from reflexy.helpers import create_text
+from reflexy.helpers.general import create_text
 from reflexy.main import start
 from reflexy.constants import (
     CLOCK_TICK_GAME_SPEED,
@@ -50,5 +50,11 @@ def restart(runner):
     start()
 
 
+def in_game_menu(runner):
+    """"""
+    pass
+
+
 def main_menu(runner):
+    """"""
     pass

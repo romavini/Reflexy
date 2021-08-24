@@ -2,11 +2,14 @@ import math
 import pygame
 import random
 from typing import Optional
-from reflexy.helpers import (
+from reflexy.helpers.math import (
+    angle2_pi_minus_pi,
     aim,
+    calc_acceleration,
+)
+from reflexy.helpers.general import (
     get_hit_box,
     get_surface,
-    calc_acceleration,
     vision,
 )
 from reflexy.constants import (
@@ -28,8 +31,8 @@ from reflexy.constants import (
     RAY_ANIMATION_TIME,
     SPIDER_OUTPUTS,
 )
-from reflexy.models.ray import Ray
-from reflexy.logic.brain import Brain
+from reflexy.models.weapons.ray import Ray
+from reflexy.logic.simple.spider_logic import Brain
 
 
 class LaserSpider(pygame.sprite.Sprite):
@@ -147,7 +150,7 @@ class LaserSpider(pygame.sprite.Sprite):
                 ]
             )
 
-            self.to_angle = self.angle2_pi_minus_pi(to_angle)
+            self.to_angle = angle2_pi_minus_pi(to_angle)
 
             if not self.state_of_movement == "recoil":
                 self.aim_angle_rad = self.to_angle
@@ -333,20 +336,6 @@ class LaserSpider(pygame.sprite.Sprite):
             self.rect[0] + SPIDER_WIDTH / 2,
             self.rect[1] + SPIDER_HEIGHT / 2,
         )
-
-    @staticmethod
-    def angle2_pi_minus_pi(angle):
-        angle_deg = math.degrees(angle)
-
-        if angle_deg < 360:
-            if angle_deg > 180:
-                angle_deg = angle_deg - 360
-        else:
-            while (angle_deg + 360) // 360 >= 1 and angle_deg > 180:
-                if angle_deg > 180:
-                    angle_deg = angle_deg - 360
-
-        return math.radians(angle_deg)
 
     def call_ray(self, screen: pygame.Surface, player_sprite):
         """Shoot laser.

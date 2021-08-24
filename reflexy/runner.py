@@ -1,7 +1,7 @@
 import pygame
 import sys
 import time
-from reflexy.menus import main_menu, restart
+from reflexy.menus.menus import main_menu, in_game_menu, restart
 from reflexy.constants import (
     MAX_SPAWN_SPIDER,
     SCREEN_WIDTH,
@@ -13,11 +13,10 @@ from reflexy.constants import (
     TIME_SPAWN_SPIDER,
     COOLDOWN_PLAYER_IMMUNE,
 )
-from reflexy.helpers import (
+from reflexy.helpers.general import (
     create_text,
     get_image_path,
     create_pygame_font,
-    get_minor_distance,
 )
 from reflexy.models.player import Player
 from reflexy.models.laser_spider import LaserSpider

@@ -1,9 +1,9 @@
 from typing import Any
 import pygame
-from reflexy.helpers import (
+from reflexy.helpers.math import calc_acceleration
+from reflexy.helpers.general import (
     get_hit_box,
     get_surface,
-    calc_acceleration,
     vision,
 )
 from reflexy.constants import (
@@ -24,7 +24,7 @@ from reflexy.constants import (
     PLAYER_DECELERATION_FUNC,
     PLAYER_OUTPUTS,
 )
-from reflexy.logic.brain import Brain
+from reflexy.logic.ann.player_logic import Brain
 
 
 class Player(pygame.sprite.Sprite):

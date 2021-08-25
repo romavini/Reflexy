@@ -1,6 +1,10 @@
 import math
 
 
+def distance(a, b):
+    return round(math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2), 2)
+
+
 def segments_intersect(segment_self, segment_target):
     """Return the point of irtercet of two segments.
 
@@ -8,21 +12,30 @@ def segments_intersect(segment_self, segment_target):
     two sets of segments
     """
 
+    def is_between(a, c, b):
+        return math.isclose(distance(a, c) + distance(c, b), distance(a, b), abs_tol=0.05)
+
     def line(segment):
         p1, p2 = segment
         A = p1[1] - p2[1]
         B = p2[0] - p1[0]
         C = p1[0] * p2[1] - p2[0] * p1[1]
+
         return A, B, -C
 
     def intersection(L1, L2):
         D = L1[0] * L2[1] - L1[1] * L2[0]
         Dx = L1[2] * L2[1] - L1[1] * L2[2]
         Dy = L1[0] * L2[2] - L1[2] * L2[0]
+
         if D != 0:
             x = int(Dx / D)
             y = int(Dy / D)
-            return x, y
+
+            if is_between(segment_target[0], [x, y], segment_target[1]):
+                return x, y
+            else:
+                return False
         else:
             return False
 
@@ -30,9 +43,6 @@ def segments_intersect(segment_self, segment_target):
     L2 = line(segment_target)
 
     R = intersection(L1, L2)
-
-    if not R:
-        return segment_self[0]
 
     return R
 
@@ -53,12 +63,12 @@ def angle2_pi_minus_pi(angle):
 
 def get_relative_distance_point(start_point, final_point, defaul_value):
     """Return a float value to distance."""
-    s_x, s_y = start_point
-    e_x, e_y = final_point
+    # s_x, s_y = start_point
+    # e_x, e_y = final_point
 
-    h_dist = round(s_x - e_x)
-    v_dist = round(s_y - e_y)
-    value = 1 - (math.sqrt(h_dist ** 2 + v_dist ** 2) / defaul_value)
+    # h_dist = round(s_x - e_x)
+    # v_dist = round(s_y - e_y)
+    value = 1 - (distance(start_point, final_point) / defaul_value)
     value = 0 if value < 0 else 1 if value > 1 else round(value, 3)
 
     return value

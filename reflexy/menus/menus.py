@@ -9,9 +9,14 @@ from reflexy.constants import (
 )
 
 
-def restart(runner):
-    """Draw the restart screen."""
-    if not runner.allow_restart:
+def restart(runner, allow_restart=True):
+    """Draw the restart screen.
+
+    Keyword arguments
+    runner -- Screen to print
+    allow_restart -- bool value (default True)
+    """
+    if not allow_restart:
         pygame.quit()
         sys.exit()
 
@@ -23,12 +28,12 @@ def restart(runner):
         runner.clock.tick(CLOCK_TICK_GAME_SPEED)
         runner.screen.blit(runner.background, (0, 0))
         create_text(
-            runner,
+            runner.screen,
             "You Died! Press R to restart",
             (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
         )
         create_text(
-            runner,
+            runner.screen,
             f"Score: {runner.player.score}",
             (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 1.5),
         )

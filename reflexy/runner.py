@@ -16,7 +16,6 @@ from reflexy.constants import (
 from reflexy.helpers.general import (
     create_text,
     get_image_path,
-    create_pygame_font,
 )
 from reflexy.models.player import Player
 from reflexy.models.laser_spider import LaserSpider
@@ -53,8 +52,6 @@ class Runner:
         self.time = self.time_refence
         self.last_time = self.time
         self.time_game()
-
-        self.text = create_pygame_font(size=FONT_SIZE, bold=True)
 
         self.allow_restart = allow_restart
 
@@ -263,32 +260,37 @@ class Runner:
     def update_score_lives(self):
         """Update player's lives and score."""
         create_text(
-            self,
+            self.screen,
             "Lives = " + str(self.player.hp),
             (SCREEN_WIDTH // 10, SCREEN_HEIGHT // 8),
+            size=FONT_SIZE,
         )
         create_text(
-            self,
+            self.screen,
             str(self.player.score),
             (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 8),
+            size=FONT_SIZE,
         )
         create_text(
-            self,
+            self.screen,
             f"Time = {str(self.time_display)}",
             (SCREEN_WIDTH - SCREEN_WIDTH // 10, SCREEN_HEIGHT // 8),
+            size=FONT_SIZE,
         )
 
     def update_generation(self, generation, pop, max_pop):
         create_text(
-            self,
+            self.screen,
             "Geneation = " + str(generation + 1),
             (SCREEN_WIDTH - SCREEN_WIDTH // 8, SCREEN_HEIGHT // 8 * 2),
+            size=FONT_SIZE,
         )
 
         create_text(
-            self,
+            self.screen,
             f"Pop = {str(pop + 1)}/{max_pop}",
             (SCREEN_WIDTH - SCREEN_WIDTH // 10, SCREEN_HEIGHT // 8 * 3),
+            size=FONT_SIZE,
         )
 
     def update_frame(self, generation, pop, max_pop):

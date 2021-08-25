@@ -86,8 +86,12 @@ class Ray(pygame.sprite.Sprite):
         ]
 
         point_end = [
-            int(point_start[0] + math.cos(math.radians(self.current_angle)) * RAY_WIDTH),
-            int(point_start[1] - math.sin(math.radians(self.current_angle)) * RAY_WIDTH),
+            int(
+                point_start[0] + math.cos(math.radians(self.current_angle)) * RAY_WIDTH
+            ),
+            int(
+                point_start[1] - math.sin(math.radians(self.current_angle)) * RAY_WIDTH
+            ),
         ]
 
         return (point_start, point_end)

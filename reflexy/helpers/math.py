@@ -58,7 +58,7 @@ def get_relative_distance_point(start_point, final_point, defaul_value):
 
     h_dist = round(s_x - e_x)
     v_dist = round(s_y - e_y)
-    value = math.sqrt(h_dist ** 2 + v_dist ** 2) / defaul_value
+    value = 1 - (math.sqrt(h_dist ** 2 + v_dist ** 2) / defaul_value)
     value = 0 if value < 0 else 1 if value > 1 else round(value, 3)
 
     return value

@@ -439,42 +439,39 @@ def get_image_path(filename: str, folder: str = "../../images") -> str:
     return os.path.abspath(os.path.join(os.path.dirname(__file__), folder, filename))
 
 
-def create_pygame_font(
-    name: str = "Comic Sans", size: int = 18, bold: bool = False
-) -> pygame.font.Font:
-    """Return a font.
-
-    Keyword arguments:
-    size -- size of the image (defalt 18)
-    name -- name of the font (defalt "Comic Sans")
-    bold -- bold of the font (defalt False)
-    """
-    if not isinstance(name, str):
-        raise TypeError(f"Font name must be a string. Got {type(name)}.")
-    if not isinstance(size, int):
-        raise TypeError(f"Font size must be an integer. Got {type(size)}.")
-    return pygame.font.SysFont(name, size, bold)
-
-
 def create_text(
-    runner,
+    screen,
     text: str,
     pos_center: Tuple[int, int],
+    color: Tuple[int, int, int] = (255, 255, 255),
+    size: int = 18,
+    font_name: str = "Comic Sans",
+    bold: bool = False,
 ):
     """Create a surface text in the window.
 
     Keyword arguments:
-    runner -- Runner class
+    screen -- Screen to print
     text -- text to be printed
     pos_center -- tuple with the center position
+    color -- Tuple with RBG values
+    size -- size of the image (defalt 18)
+    font_name -- name of the font (defalt "Comic Sans")
+    bold -- bold of the font (defalt False)
     """
+    if not isinstance(font_name, str):
+        raise TypeError(f"Font name must be a string. Got {type(font_name)}.")
+    if not isinstance(size, int):
+        raise TypeError(f"Font size must be an integer. Got {type(size)}.")
     if text is None:
         raise TypeError("Missing text argument.")
     elif not isinstance(text, str):
         raise TypeError(f"text must be a string. Got {type(text)}.")
 
-    text_render = runner.text.render(text, True, (255, 255, 255))
+    font_text = pygame.font.SysFont(font_name, size, bold)
+
+    text_render = font_text.render(text, True, color)
     textRect = text_render.get_rect()
     textRect.center = pos_center
 
-    runner.screen.blit(text_render, textRect)
+    screen.blit(text_render, textRect)

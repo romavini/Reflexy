@@ -186,7 +186,9 @@ class GeneticAlgorithm:
                 self.save_last_generation(generation)
                 runner.exit_game()
 
-            local_player_score[pop] = self.get_player_score(time, player_score, player_hp)
+            local_player_score[pop] = self.get_player_score(
+                time, player_score, player_hp
+            )
             local_enemy_score[pop] = self.get_enemy_score(
                 time, player_score, START_HP - player_hp
             )
@@ -300,7 +302,9 @@ class GeneticAlgorithm:
 
                 for layer in range(np.shape(weights)[1]):
                     shape = np.shape(weights[i][layer])
-                    mutation.append(np.random.randn(shape[0], shape[1]) * mutation_ratio)
+                    mutation.append(
+                        np.random.randn(shape[0], shape[1]) * mutation_ratio
+                    )
 
                 if weight_mutation is None:
                     weight_mutation = np.array(mutation, dtype=object)

@@ -125,6 +125,7 @@ class Player(pygame.sprite.Sprite):
                 other_has_group=True,
                 draw=self.show_vision,
             )
+            print(f"\n{player_vision = }")
 
         if self.autonomous and self.brain is None:
             layers = [PLAYER_VISION_CHANNELS]
@@ -347,7 +348,9 @@ class Player(pygame.sprite.Sprite):
         """Movement system."""
         if self.rect.bottom < (SCREEN_HEIGHT + PLAYER_HEIGHT // 2) and (
             self.move_down
-            or (self.state_of_moviment == "decelerating" and self.vertical_acc == "down")
+            or (
+                self.state_of_moviment == "decelerating" and self.vertical_acc == "down"
+            )
         ):
             self.rect.top += self.speed
 
@@ -360,7 +363,8 @@ class Player(pygame.sprite.Sprite):
         if (self.rect.left > 0 - PLAYER_WIDTH // 2) and (
             self.move_left
             or (
-                self.state_of_moviment == "decelerating" and self.horizontal_acc == "left"
+                self.state_of_moviment == "decelerating"
+                and self.horizontal_acc == "left"
             )
         ):
             self.rect.left -= self.speed

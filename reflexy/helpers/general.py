@@ -261,7 +261,9 @@ def vision(
             closer_dist = 0
             point_of_contact = start_pos
             for ray in lasers_in_sight:
-                intersect_enemy = segments_intersect([start_pos, end_pos], ray.hit_box[0])
+                intersect_enemy = segments_intersect(
+                    [start_pos, end_pos], ray.hit_box[0]
+                )
 
                 if intersect_enemy:
                     dist = get_relative_distance_point(
@@ -422,7 +424,11 @@ def vision(
                 x, y = start_pos
                 for i, [e, color] in enumerate(
                     zip(
-                        [vec_wall_vision[-1], vec_laser_vision[-1], vec_enemy_vision[-1]],
+                        [
+                            vec_wall_vision[-1],
+                            vec_laser_vision[-1],
+                            vec_enemy_vision[-1],
+                        ],
                         ["black", "blue", "red"],
                     )
                 ):

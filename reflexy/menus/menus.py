@@ -31,11 +31,13 @@ def restart(runner, allow_restart=True):
             runner.screen,
             "You Died! Press R to restart",
             (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
+            size=26,
         )
         create_text(
             runner.screen,
             f"Score: {runner.player.score}",
             (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 1.5),
+            size=26,
         )
 
         for event in pygame.event.get():

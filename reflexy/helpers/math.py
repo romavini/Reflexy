@@ -13,7 +13,9 @@ def segments_intersect(segment_self, segment_target):
     """
 
     def is_between(a, c, b):
-        return math.isclose(distance(a, c) + distance(c, b), distance(a, b), abs_tol=0.05)
+        return math.isclose(
+            distance(a, c) + distance(c, b), distance(a, b), abs_tol=0.05
+        )
 
     def line(segment):
         p1, p2 = segment

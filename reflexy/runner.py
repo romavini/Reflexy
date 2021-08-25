@@ -10,6 +10,7 @@ from reflexy.constants import (
     CLOCK_TICK_GAME_SPEED,
     CLOCK_TICK_REFERENCE,
     FONT_SIZE,
+    SCREEN_WIDTH_AI,
     TIME_SPAWN_SPIDER,
     COOLDOWN_PLAYER_IMMUNE,
 )
@@ -25,6 +26,7 @@ class Runner:
     def __init__(
         self,
         autonomous=False,
+        training=False,
         show_vision=False,
         allow_restart=True,
         W_player_matrix=None,
@@ -41,7 +43,12 @@ class Runner:
 
         pygame.init()
 
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        if training:
+            self.screen = pygame.display.set_mode(
+                (SCREEN_WIDTH + SCREEN_WIDTH_AI, SCREEN_HEIGHT)
+            )
+        else:
+            self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption(CAPTION)
 
         self.clock = pygame.time.Clock()

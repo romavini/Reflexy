@@ -24,7 +24,8 @@ from reflexy.constants import (
     PLAYER_DECELERATION_FUNC,
     PLAYER_OUTPUTS,
 )
-from reflexy.logic.ann.player_logic import Brain
+
+# from reflexy.logic.ann.player_logic import Brain
 
 
 class Player(pygame.sprite.Sprite):
@@ -125,6 +126,7 @@ class Player(pygame.sprite.Sprite):
                 other_has_group=True,
                 draw=self.show_vision,
             )
+            # print(f"{player_vision = }")
 
         if self.autonomous and self.brain is None:
             layers = [PLAYER_VISION_CHANNELS]

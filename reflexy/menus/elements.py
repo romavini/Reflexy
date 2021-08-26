@@ -1,4 +1,4 @@
-from reflexy.helpers.general import create_text
+from reflexy.constants import TEXT_FONT, TEXT_FONT_SIZE
 
 
 class createButton:
@@ -11,8 +11,8 @@ class createButton:
         color_light=(170, 170, 170),
         color_dark=(100, 100, 100),
         text_color=(255, 255, 255),
-        text_size=35,
-        font_name="Corbel",
+        text_size=TEXT_FONT_SIZE,
+        font_name=TEXT_FONT,
     ):
         """Create a button.
 

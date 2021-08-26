@@ -1,15 +1,14 @@
 from reflexy.runner import Runner
 from reflexy.menus.elements import createButton
-import sys
-import time
 import pygame
 from reflexy.helpers.general import create_text, exit_game
 from reflexy.constants import (
     CAPTION,
-    CLOCK_TICK_GAME_SPEED,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
     SCREEN_WIDTH_AI,
+    TITLE_FONT,
+    TITLE_FONT_SIZE,
 )
 
 
@@ -23,40 +22,42 @@ def restart(runner, allow_restart=True):
     if not allow_restart:
         exit_game()
 
-    restart_game = False
+    play_button = createButton("Play", "play", (100, 100), (160, 60))
+    settings_button = createButton("Settings", "settings", (100, 200), (160, 60))
+    ai_button = createButton("AI", "ai", (100, 300), (160, 60))
+    quit_button = createButton("Quit", "quit", (100, 400), (160, 60))
+    main_menu_buttons = [
+        play_button,
+        settings_button,
+        ai_button,
+        quit_button,
+    ]
 
-    runner.screen.fill((0, 0, 0))
+    runner.screen.blit(runner.background, (0, 0))
 
-    while not restart_game:
-        runner.clock.tick(CLOCK_TICK_GAME_SPEED)
-        runner.screen.blit(runner.background, (0, 0))
+    while True:
+        check_events(runner.screen, main_menu_buttons)
+
         create_text(
             runner.screen,
-            "You Died! Press R to restart",
-            (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
-            size=26,
+            "Reflexy",
+            (SCREEN_WIDTH // 2 + 100, SCREEN_HEIGHT // 4),
+            size=TITLE_FONT_SIZE,
+            font_name=TITLE_FONT,
+        )
+
+        create_text(
+            runner.screen,
+            "You Died!",
+            (SCREEN_WIDTH // 2 + 100, SCREEN_HEIGHT // 2),
         )
         create_text(
             runner.screen,
             f"Score: {runner.player.score}",
-            (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 1.5),
-            size=26,
+            (SCREEN_WIDTH // 2 + 100, SCREEN_HEIGHT // 2 + 50),
         )
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                exit_game()
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_r:
-                    restart_game = True
-                if event.key == pygame.K_ESCAPE:
-                    exit_game()
-
         pygame.display.update()
-
-    runner = Runner(autonomous=False, show_vision=True, allow_restart=True)
-    runner.run()
 
 
 def in_game_menu():
@@ -162,10 +163,10 @@ def main_menu():
     pygame.init()
     screen, clock = create_screen()
 
-    play_button = createButton("Play", "play", (200, 100), (160, 60))
-    settings_button = createButton("Settings", "settings", (200, 200), (160, 60))
-    ai_button = createButton("AI", "ai", (200, 300), (160, 60))
-    quit_button = createButton("Quit", "quit", (200, 400), (160, 60))
+    play_button = createButton("Play", "play", (100, 100), (160, 60))
+    settings_button = createButton("Settings", "settings", (100, 200), (160, 60))
+    ai_button = createButton("AI", "ai", (100, 300), (160, 60))
+    quit_button = createButton("Quit", "quit", (100, 400), (160, 60))
     main_menu_buttons = [
         play_button,
         settings_button,
@@ -174,6 +175,14 @@ def main_menu():
     ]
 
     while True:
+        create_text(
+            screen,
+            "Reflexy",
+            (SCREEN_WIDTH // 2 + 200, SCREEN_HEIGHT // 4),
+            size=TITLE_FONT_SIZE,
+            font_name=TITLE_FONT,
+        )
+
         check_events(screen, main_menu_buttons)
 
         pygame.display.update()

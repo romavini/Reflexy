@@ -1,8 +1,7 @@
-import json
 import os
 import sys
 import numpy as np
-from reflexy.constants import SCREEN_HEIGHT, SCREEN_WIDTH
+from reflexy.constants import SCREEN_HEIGHT, SCREEN_WIDTH, TEXT_FONT, TEXT_FONT_SIZE
 from reflexy.helpers.math import segments_intersect, get_relative_distance_point
 from typing import List, Tuple
 import pygame
@@ -568,6 +567,20 @@ def get_surface(
     )
 
 
+def get_font_path(filename: str, folder: str = "../../fonts") -> str:
+    """Return the path of a font.
+
+    Keyword arguments:
+    filename -- name of font
+    """
+    if not filename:
+        raise TypeError("Missing filename argument.")
+
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), folder, filename + ".ttf")
+    )
+
+
 def get_image_path(filename: str, folder: str = "../../images") -> str:
     """Return the path of a image.
 
@@ -585,9 +598,8 @@ def create_text(
     text: str,
     pos_center: Tuple[int, int],
     color: Tuple[int, int, int] = (255, 255, 255),
-    size: int = 18,
-    font_name: str = "Comic Sans",
-    bold: bool = False,
+    size: int = TEXT_FONT_SIZE,
+    font_name: str = TEXT_FONT,
 ):
     """Create a surface text in the window.
 
@@ -609,7 +621,7 @@ def create_text(
     elif not isinstance(text, str):
         raise TypeError(f"text must be a string. Got {type(text)}.")
 
-    font_text = pygame.font.SysFont(font_name, size, bold)
+    font_text = pygame.font.Font(get_font_path(font_name), size)
 
     text_render = font_text.render(text, True, color)
     textRect = text_render.get_rect()

@@ -7,7 +7,8 @@ from reflexy.constants import (
     CAPTION,
     CLOCK_TICK_GAME_SPEED,
     CLOCK_TICK_REFERENCE,
-    FONT_SIZE,
+    SCORE_FONT_SIZE,
+    SCORE_FONT,
     SCREEN_WIDTH_AI,
     TIME_SPAWN_SPIDER,
     COOLDOWN_PLAYER_IMMUNE,
@@ -269,19 +270,22 @@ class Runner:
             self.screen,
             "Lives = " + str(self.player.hp),
             (SCREEN_WIDTH // 10, SCREEN_HEIGHT // 8),
-            size=FONT_SIZE,
+            size=SCORE_FONT_SIZE,
+            font_name=SCORE_FONT,
         )
         create_text(
             self.screen,
             str(self.player.score),
             (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 8),
-            size=FONT_SIZE,
+            size=SCORE_FONT_SIZE,
+            font_name=SCORE_FONT,
         )
         create_text(
             self.screen,
             f"Time = {str(self.time_display)}",
             (SCREEN_WIDTH - SCREEN_WIDTH // 10, SCREEN_HEIGHT // 8),
-            size=FONT_SIZE,
+            size=SCORE_FONT_SIZE,
+            font_name=SCORE_FONT,
         )
 
     def update_generation(self, generation, pop, max_pop):
@@ -289,14 +293,16 @@ class Runner:
             self.screen,
             "Geneation = " + str(generation + 1),
             (SCREEN_WIDTH - SCREEN_WIDTH // 8, SCREEN_HEIGHT // 8 * 2),
-            size=FONT_SIZE,
+            size=SCORE_FONT_SIZE,
+            font_name=SCORE_FONT,
         )
 
         create_text(
             self.screen,
             f"Pop = {str(pop + 1)}/{max_pop}",
             (SCREEN_WIDTH - SCREEN_WIDTH // 10, SCREEN_HEIGHT // 8 * 3),
-            size=FONT_SIZE,
+            size=SCORE_FONT_SIZE,
+            font_name=SCORE_FONT,
         )
 
     def update_frame(self, generation, pop, max_pop):

@@ -113,7 +113,7 @@ def check_events(screen, buttons):
                 if check_mouse(button, mouse_pos):
                     if button.id == "play":
                         runner = Runner(
-                            autonomous=False, show_vision=True, allow_restart=True
+                            autonomous=False, show_vision=False, allow_restart=True
                         )
                         while True:
                             runner.run()

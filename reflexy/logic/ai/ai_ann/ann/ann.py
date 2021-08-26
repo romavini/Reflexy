@@ -3,7 +3,7 @@ from typing import List
 import numpy as np
 
 
-class Brain:
+class annBrain:
     def __init__(self, W=None, b=None, layers=None, read=None):
         """
 
@@ -11,22 +11,23 @@ class Brain:
         """
         self.params = {}
         self.layers = layers
+        self.std = std
 
         if not (read is None):
             self.W, self.b = read_weights(read)
 
         if W is None or b is None:
-            self.create_weights(layers)
+            self.create_weights()
         else:
             self.W = W
             self.b = b
 
-    def create_weights(self, layers=[72, 100, 5], std=1e-1):
+    def create_weights(self):
         self.W = []
         self.b = []
 
         for i in range(1, len(self.layers)):
-            self.params[f"W{i}"] = std * np.random.randn(
+            self.params[f"W{i}"] = self.std * np.random.randn(
                 self.layers[i - 1], self.layers[i]
             )
             self.W.append(self.params[f"W{i}"])

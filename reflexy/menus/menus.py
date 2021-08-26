@@ -22,6 +22,8 @@ def restart(runner, allow_restart=True):
     if not allow_restart:
         exit_game()
 
+    fill_screen(runner.screen)
+
     play_button = createButton("Play", "play", (100, 100), (160, 60))
     settings_button = createButton("Settings", "settings", (100, 200), (160, 60))
     ai_button = createButton("AI", "ai", (100, 300), (160, 60))
@@ -60,9 +62,10 @@ def restart(runner, allow_restart=True):
         pygame.display.update()
 
 
-def in_game_menu():
+def fill_screen(screen):
     """"""
-    pass
+    bgcolor = (25, 25, 50)
+    screen.fill(bgcolor)
 
 
 def create_screen():
@@ -70,8 +73,7 @@ def create_screen():
     screen = pygame.display.set_mode((SCREEN_WIDTH + SCREEN_WIDTH_AI, SCREEN_HEIGHT))
     pygame.display.set_caption(CAPTION)
     clock = pygame.time.Clock()
-    bgcolor = (25, 25, 50)
-    screen.fill(bgcolor)
+    fill_screen(screen)
     pygame.display.flip()
 
     return screen, clock
@@ -98,6 +100,7 @@ def check_mouse(button, mouse_pos):
 def check_events(screen, buttons):
     """"""
     mouse_pos = pygame.mouse.get_pos()
+    button_return = False
 
     for event in pygame.event.get():
 
@@ -115,6 +118,21 @@ def check_events(screen, buttons):
                         while True:
                             runner.run()
                             restart(runner)
+
+                    elif button.id == "ai":
+                        ai_menu(screen)
+
+                    elif button.id == "settings":
+                        pass
+
+                    elif button.id == "train":
+                        pass
+
+                    elif button.id == "execute":
+                        pass
+
+                    elif button.id == "return":
+                        button_return = True
 
                     elif button.id == "quit":
                         exit_game()
@@ -157,6 +175,38 @@ def check_events(screen, buttons):
                 button.font_name,
             )
 
+    return button_return
+
+
+def ai_menu(screen):
+    """"""
+    train_button = createButton("Train", "train", (100, 100), (160, 60))
+    execute_button = createButton("Execute", "execute", (100, 200), (160, 60))
+    return_button = createButton("Return", "return", (100, 300), (160, 60))
+    ai_menu_buttons = [
+        train_button,
+        execute_button,
+        return_button,
+    ]
+    fill_screen(screen)
+
+    while True:
+        create_text(
+            screen,
+            "Reflexy",
+            (SCREEN_WIDTH // 2 + 200, SCREEN_HEIGHT // 4),
+            size=TITLE_FONT_SIZE,
+            font_name=TITLE_FONT,
+        )
+
+        button_return = check_events(screen, ai_menu_buttons)
+
+        if button_return:
+            fill_screen(screen)
+            break
+
+        pygame.display.update()
+
 
 def main_menu():
     """"""
@@ -167,6 +217,7 @@ def main_menu():
     settings_button = createButton("Settings", "settings", (100, 200), (160, 60))
     ai_button = createButton("AI", "ai", (100, 300), (160, 60))
     quit_button = createButton("Quit", "quit", (100, 400), (160, 60))
+
     main_menu_buttons = [
         play_button,
         settings_button,

@@ -1,12 +1,10 @@
+from reflexy.menus.menus import main_menu
 import sys
 
 
 def start():
     """Run the game."""
-    from reflexy.runner import Runner
-
-    runner = Runner(autonomous=False, training=True, show_vision=True, allow_restart=True)
-    runner.run()
+    main_menu()
 
 
 if __name__ == "__main__":

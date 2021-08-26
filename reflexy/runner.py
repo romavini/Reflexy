@@ -1,7 +1,5 @@
 import pygame
-import sys
 import time
-from reflexy.menus.menus import main_menu, in_game_menu, restart
 from reflexy.constants import (
     MAX_SPAWN_SPIDER,
     SCREEN_WIDTH,
@@ -16,6 +14,7 @@ from reflexy.constants import (
 )
 from reflexy.helpers.general import (
     create_text,
+    exit_game,
     get_image_path,
 )
 from reflexy.models.player import Player
@@ -25,6 +24,7 @@ from reflexy.models.laser_spider import LaserSpider
 class Runner:
     def __init__(
         self,
+        screen=None,
         autonomous=False,
         training=False,
         show_vision=False,
@@ -35,6 +35,7 @@ class Runner:
         b_enemy_matrix=None,
     ):
         self.autonomous = autonomous
+        self.training = training
         self.show_vision = show_vision
         self.W_enemy_matrix = W_enemy_matrix
         self.b_enemy_matrix = b_enemy_matrix
@@ -47,9 +48,12 @@ class Runner:
             self.screen = pygame.display.set_mode(
                 (SCREEN_WIDTH + SCREEN_WIDTH_AI, SCREEN_HEIGHT)
             )
-        else:
+            pygame.display.set_caption("Training", CAPTION)
+        elif screen is None:
             self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        pygame.display.set_caption(CAPTION)
+            pygame.display.set_caption(CAPTION)
+        else:
+            self.screen = screen
 
         self.clock = pygame.time.Clock()
         self.background = self.create_background("background-field.png")
@@ -108,10 +112,6 @@ class Runner:
         bg = pygame.image.load(get_image_path(bg_image))
 
         return pygame.transform.scale(bg, (SCREEN_WIDTH, SCREEN_HEIGHT))
-
-    def exit_game(self):
-        pygame.quit()
-        sys.exit()
 
     def time_game(self):
         """Clock of the game."""
@@ -246,8 +246,7 @@ class Runner:
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                exit_game()
 
             if event.type == pygame.KEYDOWN:
                 self.player.keydown(event.key)
@@ -257,7 +256,7 @@ class Runner:
                     if self.autonomous:
                         self.exit = True
                     else:
-                        self.exit_game()
+                        exit_game()
 
                 if event.key == pygame.K_SPACE:
                     self.player.attack()
@@ -322,8 +321,6 @@ class Runner:
 
     def run(self, time=None, generation=None, pop=None, max_pop=None):
         """Loop each frame of the game."""
-        main_menu(self)
-
         while self.player.hp > 0:
             self.clock.tick(CLOCK_TICK_GAME_SPEED)
             self.check_events()
@@ -344,5 +341,3 @@ class Runner:
                 self.player.hp,
                 self.exit,
             )
-
-        restart(self)

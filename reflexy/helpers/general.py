@@ -1,11 +1,17 @@
 import json
 import os
+import sys
 import numpy as np
 from reflexy.constants import SCREEN_HEIGHT, SCREEN_WIDTH
 from reflexy.helpers.math import segments_intersect, get_relative_distance_point
 from typing import List, Tuple
 import pygame
 import math
+
+
+def exit_game():
+    pygame.quit()
+    sys.exit()
 
 
 def intersect_hit_box(segment_a, hit_box) -> bool:
@@ -529,24 +535,6 @@ def vision(
     vec_vision = np.array(vec_vision)
 
     return vec_vision
-
-
-def read_weights(read, local_dir="reflexy/logic/"):
-    files = os.listdir(os.path.join(local_dir, "params/"))
-
-    with open(f"{os.path.join(local_dir, 'params', files[0])}", "r") as f:
-        obj = f.read()
-
-    dict_weights = json.loads(obj)
-
-    if read == "player":
-        W = np.array(dict_weights["last_player_weights"], dtype=object)
-        b = np.array(dict_weights["last_player_bias"], dtype=object)
-    elif read == "enemy":
-        W = np.array(dict_weights["last_enemy_weights"], dtype=object)
-        b = np.array(dict_weights["last_enemy_bias"], dtype=object)
-
-    return W, b
 
 
 def get_surface(

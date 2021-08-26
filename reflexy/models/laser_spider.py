@@ -32,7 +32,6 @@ from reflexy.constants import (
     SPIDER_OUTPUTS,
 )
 from reflexy.models.weapons.ray import Ray
-from reflexy.logic.simple.spider_logic import Brain
 
 
 class LaserSpider(pygame.sprite.Sprite):

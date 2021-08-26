@@ -45,8 +45,9 @@ class Player(pygame.sprite.Sprite):
 
         pygame.sprite.Sprite.__init__(self)
 
-        self.W = W
-        self.b = b
+        if autonomous:
+            self.W = W
+            self.b = b
 
         self.screen = screen
         self.time = time
@@ -349,7 +350,9 @@ class Player(pygame.sprite.Sprite):
         """Movement system."""
         if self.rect.bottom < (SCREEN_HEIGHT + PLAYER_HEIGHT // 2) and (
             self.move_down
-            or (self.state_of_moviment == "decelerating" and self.vertical_acc == "down")
+            or (
+                self.state_of_moviment == "decelerating" and self.vertical_acc == "down"
+            )
         ):
             self.rect.top += self.speed
 
@@ -362,7 +365,8 @@ class Player(pygame.sprite.Sprite):
         if (self.rect.left > 0 - PLAYER_WIDTH // 2) and (
             self.move_left
             or (
-                self.state_of_moviment == "decelerating" and self.horizontal_acc == "left"
+                self.state_of_moviment == "decelerating"
+                and self.horizontal_acc == "left"
             )
         ):
             self.rect.left -= self.speed

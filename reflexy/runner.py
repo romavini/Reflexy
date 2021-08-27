@@ -1,3 +1,5 @@
+from reflexy.menus.elements import keyboard_keys
+from reflexy.logic.ai.ai_ann.ann.helpers.general import update_generation
 import pygame
 import time
 from reflexy.constants import (
@@ -32,14 +34,10 @@ class Runner:
         allow_restart=True,
         W_player_matrix=None,
         b_player_matrix=None,
-        W_enemy_matrix=None,
-        b_enemy_matrix=None,
     ):
         self.autonomous = autonomous
         self.training = training
         self.show_vision = show_vision
-        self.W_enemy_matrix = W_enemy_matrix
-        self.b_enemy_matrix = b_enemy_matrix
         self.started = False
         self.exit = False
 
@@ -85,10 +83,8 @@ class Runner:
             LaserSpider(
                 self.screen,
                 self.time,
-                self.autonomous,
-                False,
-                self.W_enemy_matrix,
-                self.b_enemy_matrix,
+                autonomous=False,
+                show_vision=False,
             )
         )
         self.player_group.add(self.player)
@@ -216,10 +212,8 @@ class Runner:
             LaserSpider(
                 self.screen,
                 self.time,
-                self.autonomous,
-                False,
-                self.W_enemy_matrix,
-                self.b_enemy_matrix,
+                autonomous=False,
+                show_vision=False,
             )
         )
 
@@ -288,24 +282,7 @@ class Runner:
             font_name=SCORE_FONT,
         )
 
-    def update_generation(self, generation, pop, max_pop):
-        create_text(
-            self.screen,
-            "Geneation = " + str(generation + 1),
-            (SCREEN_WIDTH - SCREEN_WIDTH // 8, SCREEN_HEIGHT // 8 * 2),
-            size=SCORE_FONT_SIZE,
-            font_name=SCORE_FONT,
-        )
-
-        create_text(
-            self.screen,
-            f"Pop = {str(pop + 1)}/{max_pop}",
-            (SCREEN_WIDTH - SCREEN_WIDTH // 10, SCREEN_HEIGHT // 8 * 3),
-            size=SCORE_FONT_SIZE,
-            font_name=SCORE_FONT,
-        )
-
-    def update_frame(self, generation, pop, max_pop):
+    def update_frame(self, generation, pop, max_pop, best_score, keyboard):
         """Draw all elements on the screen."""
         self.screen.blit(self.background, (0, 0))
         self.time_game()
@@ -320,17 +297,19 @@ class Runner:
         self.enemy_group.update(self.time, self.player, self.enemy_group)
         self.player_group.update(self.time, self.enemy_group)
         self.update_score_lives()
-        if not (generation is None):
-            self.update_generation(generation, pop, max_pop)
+
+        if self.autonomous:
+            update_generation(self, generation, pop, max_pop, best_score, keyboard)
 
         pygame.display.update()
 
-    def run(self, time=None, generation=None, pop=None, max_pop=None):
+    def run(self, time=None, generation=None, pop=None, max_pop=None, best_score=None):
         """Loop each frame of the game."""
+        keyboard = keyboard_keys()
         while self.player.hp > 0:
             self.clock.tick(CLOCK_TICK_GAME_SPEED)
             self.check_events()
-            self.update_frame(generation, pop, max_pop)
+            self.update_frame(generation, pop, max_pop, best_score, keyboard)
             self.hp()
 
             if self.exit:

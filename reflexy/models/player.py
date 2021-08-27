@@ -1,3 +1,4 @@
+from reflexy.logic.ai.ai_ann.ann.ann import annBrain
 from typing import Any
 import pygame
 from reflexy.helpers.math import calc_acceleration
@@ -24,8 +25,6 @@ from reflexy.constants import (
     PLAYER_DECELERATION_FUNC,
     PLAYER_OUTPUTS,
 )
-
-# from reflexy.logic.ann.player_logic import Brain
 
 
 class Player(pygame.sprite.Sprite):
@@ -91,6 +90,7 @@ class Player(pygame.sprite.Sprite):
         self.move_right = False
         self.move_up = False
         self.move_down = False
+        self.to_attack = False
 
         self.horizontal_acc = None
         self.vertical_acc = None
@@ -134,14 +134,14 @@ class Player(pygame.sprite.Sprite):
             layers.extend(LAYERS)
             layers.extend([PLAYER_OUTPUTS])
             if not (self.W is None) and not (self.b is None):
-                self.brain = Brain(
+                self.brain = annBrain(
                     W=self.W,
                     b=self.b,
                     layers=layers,
                     read=None,
                 )
             else:
-                self.brain = Brain(
+                self.brain = annBrain(
                     layers=layers,
                     read=None,
                 )
@@ -160,10 +160,10 @@ class Player(pygame.sprite.Sprite):
                 self.move_right,
                 self.move_up,
                 self.move_down,
-                to_attack,
-            ] = self.brain.action_ativation(self.brain.analyze(player_vision))
+                self.to_attack,
+            ] = self.brain.analyze(player_vision)
 
-            if to_attack:
+            if self.to_attack:
                 self.attack()
 
         self.update_state_of_moviment()
@@ -350,9 +350,7 @@ class Player(pygame.sprite.Sprite):
         """Movement system."""
         if self.rect.bottom < (SCREEN_HEIGHT + PLAYER_HEIGHT // 2) and (
             self.move_down
-            or (
-                self.state_of_moviment == "decelerating" and self.vertical_acc == "down"
-            )
+            or (self.state_of_moviment == "decelerating" and self.vertical_acc == "down")
         ):
             self.rect.top += self.speed
 
@@ -365,8 +363,7 @@ class Player(pygame.sprite.Sprite):
         if (self.rect.left > 0 - PLAYER_WIDTH // 2) and (
             self.move_left
             or (
-                self.state_of_moviment == "decelerating"
-                and self.horizontal_acc == "left"
+                self.state_of_moviment == "decelerating" and self.horizontal_acc == "left"
             )
         ):
             self.rect.left -= self.speed

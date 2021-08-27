@@ -1,4 +1,10 @@
-from reflexy.constants import TEXT_FONT, TEXT_FONT_SIZE
+from reflexy.constants import (
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+    SCREEN_WIDTH_AI,
+    TEXT_FONT,
+    TEXT_FONT_SIZE,
+)
 
 
 class createButton:
@@ -40,3 +46,60 @@ class createButton:
             button_pos[0] + button_width_n_height[0] // 2,
             button_pos[1] + button_width_n_height[1] // 2,
         )
+
+
+def keyboard_keys():
+    up_key = createButton(
+        "up",
+        "up",
+        (SCREEN_WIDTH + SCREEN_WIDTH_AI // 2, SCREEN_HEIGHT // 8 * 6),
+        (50, 50),
+        color_light=(255, 255, 255),
+        color_dark=(255, 0, 0),
+        text_color=(0, 0, 0),
+    )
+    down_key = createButton(
+        "down",
+        "down",
+        (SCREEN_WIDTH + SCREEN_WIDTH_AI // 2, SCREEN_HEIGHT // 8 * 7),
+        (50, 50),
+        color_light=(255, 255, 255),
+        color_dark=(255, 0, 0),
+        text_color=(0, 0, 0),
+    )
+    right_key = createButton(
+        "right",
+        "right",
+        (SCREEN_WIDTH + SCREEN_WIDTH_AI // 4 * 3, SCREEN_HEIGHT // 8 * 7),
+        (50, 50),
+        color_light=(255, 255, 255),
+        color_dark=(255, 0, 0),
+        text_color=(0, 0, 0),
+    )
+    left_key = createButton(
+        "left",
+        "left",
+        (SCREEN_WIDTH + SCREEN_WIDTH_AI // 4, SCREEN_HEIGHT // 8 * 7),
+        (50, 50),
+        color_light=(255, 255, 255),
+        color_dark=(255, 0, 0),
+        text_color=(0, 0, 0),
+    )
+    space_key = createButton(
+        "space",
+        "space",
+        (SCREEN_WIDTH + SCREEN_WIDTH_AI // 5 * 4, SCREEN_HEIGHT // 8 * 6),
+        (50, 50),
+        color_light=(255, 255, 255),
+        color_dark=(255, 0, 0),
+        text_color=(0, 0, 0),
+    )
+    keyboard_keys = [
+        space_key,
+        up_key,
+        down_key,
+        left_key,
+        right_key,
+    ]
+
+    return keyboard_keys

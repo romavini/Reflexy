@@ -11,7 +11,7 @@ class annBrain:
         """
         self.params = {}
         self.layers = layers
-        self.std = std
+        self.std = 1e-1
 
         if not (read is None):
             self.W, self.b = read_weights(read)
@@ -44,6 +44,7 @@ class annBrain:
         return [False if e < 0.5 else True for e in out_layer]
 
     def analyze(self, vec_vision):
+        len(f"{vec_vision = }")
         out_layer = vec_vision.dot(self.W[0]) + self.b[0]
         out_layer = self.func_relu(out_layer)  # ReLU
         self.params["out_layer_1"] = out_layer
@@ -52,6 +53,8 @@ class annBrain:
             local_out_layer = out_layer.dot(self.W[i]) + self.b[i]
             out_layer = self.func_relu(local_out_layer)  # ReLU
             self.params[f"out_layer_{i+1}"] = out_layer
+
+        out_layer = self.action_ativation(out_layer)
 
         return out_layer
 

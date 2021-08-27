@@ -1,3 +1,4 @@
+from reflexy.logic.ai.ai_ga.ga.ga_player import GeneticAlgorithm
 from reflexy.runner import Runner
 from reflexy.menus.elements import createButton
 import pygame
@@ -126,7 +127,7 @@ def check_events(screen, buttons):
                         pass
 
                     elif button.id == "train":
-                        pass
+                        ga = GeneticAlgorithm(screen)
 
                     elif button.id == "execute":
                         pass

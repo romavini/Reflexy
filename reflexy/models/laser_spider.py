@@ -1,4 +1,5 @@
 import math
+from reflexy.helpers.moviments import autonomous_spider_vision
 import pygame
 import random
 from typing import Optional
@@ -130,26 +131,11 @@ class LaserSpider(pygame.sprite.Sprite):
                 self.move_up,
                 self.move_down,
                 self.to_fire,
-                to_angle,
-            ] = self.brain.analyze(spider_vision)
-
-            [
-                self.move_left,
-                self.move_right,
-                self.move_up,
-                self.move_down,
-                self.to_fire,
-            ] = self.brain.action_ativation(
-                [
-                    self.move_left,
-                    self.move_right,
-                    self.move_up,
-                    self.move_down,
-                    self.to_fire,
-                ]
+                self.to_angle,
+            ] = autonomous_spider_vision(
+                self.brain,
+                self.spider_vision,
             )
-
-            self.to_angle = angle2_pi_minus_pi(to_angle)
 
             if not self.state_of_movement == "recoil":
                 self.aim_angle_rad = self.to_angle

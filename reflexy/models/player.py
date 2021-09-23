@@ -86,10 +86,10 @@ class Player(pygame.sprite.Sprite):
         self.count_blinking = 0
         self.attacking = False
 
-        self.move_left = False
-        self.move_right = False
         self.move_up = False
         self.move_down = False
+        self.move_right = False
+        self.move_left = False
         self.to_attack = False
 
         self.horizontal_acc = None
@@ -127,7 +127,6 @@ class Player(pygame.sprite.Sprite):
                 other_has_group=True,
                 draw=self.show_vision,
             )
-            # print(f"{player_vision = }")
 
         if self.autonomous and self.brain is None:
             layers = [PLAYER_VISION_CHANNELS]
@@ -156,15 +155,17 @@ class Player(pygame.sprite.Sprite):
 
         if self.autonomous and not (self.brain is None):
             [
-                self.move_left,
-                self.move_right,
                 self.move_up,
                 self.move_down,
+                self.move_right,
+                self.move_left,
                 self.to_attack,
             ] = self.brain.analyze(player_vision)
 
             if self.to_attack:
                 self.attack()
+
+            self.handle_multiple_keys()
 
         self.update_state_of_moviment()
         self.set_velocity()
@@ -209,22 +210,32 @@ class Player(pygame.sprite.Sprite):
         if (
             True
             in [
-                self.move_left,
-                self.move_right,
                 self.move_up,
                 self.move_down,
+                self.move_right,
+                self.move_left,
             ]
             and self.state_of_moviment in ["stoped", "decelerating"]
         ):
             self.state_of_moviment = "accelerating"
 
         if True not in [
-            self.move_left,
-            self.move_right,
             self.move_up,
             self.move_down,
+            self.move_right,
+            self.move_left,
         ]:
             self.state_of_moviment = "decelerating"
+
+    def handle_multiple_keys(self):
+        """Handle cases when multiple keys are selected."""
+        if self.move_right and self.move_left:
+            self.move_right = False
+            self.move_left = False
+
+        if self.move_up and self.move_down:
+            self.move_up = False
+            self.move_down = False
 
     def keydown(self, key):
         """key system

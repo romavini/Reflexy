@@ -69,7 +69,7 @@ class LaserSpider(pygame.sprite.Sprite):
         self.spawn_spider()
         self.eye_aim = (self.rect[0], self.rect[1])
 
-        self.to_fire = True
+        self.try_to_fire = True
         self.firing = False
         self.cooldown_spider_fire = True
         self.cd_tracker = self.time
@@ -126,11 +126,11 @@ class LaserSpider(pygame.sprite.Sprite):
         self.time = time
         if self.autonomous and not (self.brain is None):
             [
-                self.move_left,
-                self.move_right,
-                self.move_up,
-                self.move_down,
-                self.to_fire,
+                self.try_move_up,
+                self.try_move_down,
+                self.try_move_right,
+                self.try_move_left,
+                self.try_to_fire,
                 self.to_angle,
             ] = autonomous_spider_vision(
                 self.brain,
@@ -155,7 +155,7 @@ class LaserSpider(pygame.sprite.Sprite):
         self.eye_aim = (self.rect[0], self.rect[1])
 
         self.move_spider()
-        if (self.to_fire or self.firing) and (
+        if (self.try_to_fire or self.firing) and (
             self.firing or self.time - self.cd_tracker > COOLDOWN_SPIDER_FIRE
         ):
             self.fire(player_sprite)
@@ -259,13 +259,13 @@ class LaserSpider(pygame.sprite.Sprite):
         if self.autonomous and not (self.brain is None):
             move_through_deg = 0
 
-            if self.move_left and self.move_right:
+            if self.try_move_left and self.try_move_right:
                 if random.randint(0, 1):
                     self.move_left = False
                 else:
                     self.move_right = False
 
-            if self.move_up and self.move_down:
+            if self.try_move_up and self.try_move_down:
                 if random.randint(0, 1):
                     self.move_up = False
                 else:

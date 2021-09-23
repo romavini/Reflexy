@@ -95,11 +95,11 @@ def keyboard_keys():
         text_color=(0, 0, 0),
     )
     keyboard_keys = [
-        space_key,
         up_key,
         down_key,
-        left_key,
         right_key,
+        left_key,
+        space_key,
     ]
 
     return keyboard_keys

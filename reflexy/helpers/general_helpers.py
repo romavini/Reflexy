@@ -1,10 +1,10 @@
 import os
 import sys
-import numpy as np
+import numpy as np  # type: ignore
 from reflexy.constants import SCREEN_HEIGHT, SCREEN_WIDTH, TEXT_FONT, TEXT_FONT_SIZE
 from reflexy.helpers.math import segments_intersect, get_relative_distance_point
 from typing import List, Tuple
-import pygame
+import pygame  # type: ignore
 import math
 
 

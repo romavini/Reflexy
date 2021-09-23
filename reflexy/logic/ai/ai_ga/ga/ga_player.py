@@ -1,8 +1,8 @@
 import json
 from json import JSONEncoder
 from reflexy.helpers.general_helpers import exit_game
-import numpy as np
-from numpy import random
+import numpy as np  # type: ignore
+from numpy import random  # type: ignore
 from reflexy.constants import (
     LAYERS,
     PLAYER_OUTPUTS,

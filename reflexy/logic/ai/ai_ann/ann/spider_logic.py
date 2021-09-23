@@ -1,6 +1,6 @@
 from ann.helpers.general_ann_helpers import read_weights
 from typing import List
-import numpy as np
+import numpy as np  # type: ignore
 
 
 class Brain:

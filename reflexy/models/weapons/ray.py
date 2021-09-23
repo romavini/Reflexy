@@ -1,5 +1,5 @@
 import math
-import pygame
+import pygame  # type: ignore
 from reflexy.helpers.general_helpers import draw_box, get_surface
 from reflexy.constants import (
     RAY_WIDTH,

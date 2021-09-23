@@ -1,6 +1,6 @@
 from reflexy.menus.elements import keyboard_keys
-from ann.helpers.general_ann_helpers import update_generation
-import pygame
+from ann.helpers.general_ann_helpers import update_generation  # type: ignore
+import pygame  # type: ignore
 import time
 from reflexy.constants import (
     MAX_SPAWN_SPIDER,

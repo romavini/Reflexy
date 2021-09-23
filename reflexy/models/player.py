@@ -1,6 +1,6 @@
 from reflexy.logic.ai.ai_ann.ann.ann import annBrain
 from typing import Any
-import pygame
+import pygame  # type: ignore
 from reflexy.helpers.math import calc_acceleration
 from reflexy.helpers.general_helpers import (
     get_hit_box,

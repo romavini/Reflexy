@@ -1,7 +1,7 @@
 from reflexy.logic.ai.ai_ga.ga.ga_player import GeneticAlgorithm
 from reflexy.runner import Runner
 from reflexy.menus.elements import createButton
-import pygame
+import pygame  # type: ignore
 from reflexy.helpers.general_helpers import create_text, exit_game
 from reflexy.constants import (
     CAPTION,
@@ -27,7 +27,7 @@ def restart(runner, allow_restart=True):
 
     play_button = createButton("Play", "play", (100, 100), (160, 60))
     settings_button = createButton("Settings", "settings", (100, 200), (160, 60))
-    w = createButton("AI", "ai", (100, 300), (160, 60))
+    ai_button = createButton("AI", "ai", (100, 300), (160, 60))
     quit_button = createButton("Quit", "quit", (100, 400), (160, 60))
     main_menu_buttons = [
         play_button,

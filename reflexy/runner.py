@@ -1,5 +1,5 @@
 from reflexy.menus.elements import keyboard_keys
-from reflexy.logic.ai.ai_ann.ann.helpers.general import update_generation
+from ann.helpers.general_ann_helpers import update_generation
 import pygame
 import time
 from reflexy.constants import (
@@ -15,7 +15,7 @@ from reflexy.constants import (
     TIME_SPAWN_SPIDER,
     COOLDOWN_PLAYER_IMMUNE,
 )
-from reflexy.helpers.general import (
+from reflexy.helpers.general_helpers import (
     create_text,
     exit_game,
     get_image_path,

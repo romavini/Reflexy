@@ -1,4 +1,4 @@
-from ann.helpers.general import read_weights
+from ann.helpers.general_ann_helpers import read_weights
 from typing import List
 import numpy as np
 

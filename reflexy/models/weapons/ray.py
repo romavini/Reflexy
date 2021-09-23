@@ -1,6 +1,6 @@
 import math
 import pygame
-from reflexy.helpers.general import draw_box, get_surface
+from reflexy.helpers.general_helpers import draw_box, get_surface
 from reflexy.constants import (
     RAY_WIDTH,
     RAY_HEIGHT,

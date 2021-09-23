@@ -8,7 +8,7 @@ from reflexy.helpers.math import (
     aim,
     calc_acceleration,
 )
-from reflexy.helpers.general import (
+from reflexy.helpers.general_helpers import (
     get_hit_box,
     get_surface,
     vision,

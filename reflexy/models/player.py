@@ -2,7 +2,7 @@ from reflexy.logic.ai.ai_ann.ann.ann import annBrain
 from typing import Any
 import pygame
 from reflexy.helpers.math import calc_acceleration
-from reflexy.helpers.general import (
+from reflexy.helpers.general_helpers import (
     get_hit_box,
     get_surface,
     vision,
@@ -350,7 +350,9 @@ class Player(pygame.sprite.Sprite):
         """Movement system."""
         if self.rect.bottom < (SCREEN_HEIGHT + PLAYER_HEIGHT // 2) and (
             self.move_down
-            or (self.state_of_moviment == "decelerating" and self.vertical_acc == "down")
+            or (
+                self.state_of_moviment == "decelerating" and self.vertical_acc == "down"
+            )
         ):
             self.rect.top += self.speed
 
@@ -363,7 +365,8 @@ class Player(pygame.sprite.Sprite):
         if (self.rect.left > 0 - PLAYER_WIDTH // 2) and (
             self.move_left
             or (
-                self.state_of_moviment == "decelerating" and self.horizontal_acc == "left"
+                self.state_of_moviment == "decelerating"
+                and self.horizontal_acc == "left"
             )
         ):
             self.rect.left -= self.speed

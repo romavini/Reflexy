@@ -1,7 +1,6 @@
 import json
 from json import JSONEncoder
-import math
-from reflexy.helpers.general import exit_game
+from reflexy.helpers.general_helpers import exit_game
 import numpy as np
 from numpy import random
 from reflexy.constants import (
@@ -159,7 +158,9 @@ class GeneticAlgorithm:
                 self.save_last_generation(self.gen)
                 exit_game()
 
-            local_player_score[pop] = self.get_player_score(time, player_score, player_hp)
+            local_player_score[pop] = self.get_player_score(
+                time, player_score, player_hp
+            )
 
         if self.player_score is None:
             self.player_score = local_player_score

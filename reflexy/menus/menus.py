@@ -2,7 +2,7 @@ from reflexy.logic.ai.ai_ga.ga.ga_player import GeneticAlgorithm
 from reflexy.runner import Runner
 from reflexy.menus.elements import createButton
 import pygame
-from reflexy.helpers.general import create_text, exit_game
+from reflexy.helpers.general_helpers import create_text, exit_game
 from reflexy.constants import (
     CAPTION,
     SCREEN_HEIGHT,

@@ -1,12 +1,8 @@
-import pygame  # type: ignore
-from reflexy.helpers.general_helpers import draw_box, get_surface
-from reflexy.constants import (
-    RAY_WIDTH,
-    RAY_HEIGHT,
-    RAY_ORIGIN_X,
-    RAY_ANIMATION_TIME,
-)
 from typing import Sequence
+
+import pygame  # type: ignore
+from reflexy.constants import RAY_ANIMATION_TIME, RAY_HEIGHT, RAY_ORIGIN_X, RAY_WIDTH
+from reflexy.helpers.general_helpers import draw_box, get_surface
 
 
 class Sword(pygame.sprite.Sprite):

@@ -1,12 +1,11 @@
-from reflexy.menus.menus import main_menu
-import sys
+from reflexy.menus.menus import Menu
 
 
 def start():
     """Run the game."""
-    main_menu()
+    menu = Menu()
+    menu.main_menu()
 
 
 if __name__ == "__main__":
-
     start()

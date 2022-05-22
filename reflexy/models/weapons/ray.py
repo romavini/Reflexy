@@ -1,13 +1,9 @@
 import math
-import pygame  # type: ignore
-from reflexy.helpers.general_helpers import draw_box, get_surface
-from reflexy.constants import (
-    RAY_WIDTH,
-    RAY_HEIGHT,
-    RAY_ORIGIN_X,
-    RAY_ANIMATION_TIME,
-)
 from typing import Sequence
+
+import pygame  # type: ignore
+from reflexy.constants import RAY_ANIMATION_TIME, RAY_HEIGHT, RAY_ORIGIN_X, RAY_WIDTH
+from reflexy.helpers.general_helpers import draw_box, get_surface
 
 
 class Ray(pygame.sprite.Sprite):
@@ -49,7 +45,7 @@ class Ray(pygame.sprite.Sprite):
                 ]
             )
         ]
-        self.gradent_animate = len(self.images) / (RAY_ANIMATION_TIME * 20)
+        self.gradient_animate = len(self.images) / (RAY_ANIMATION_TIME * 20)
         self.current_image = 0
         self.image = self.images[self.current_image]
 
@@ -72,7 +68,7 @@ class Ray(pygame.sprite.Sprite):
         if self.show_vision:
             draw_box(screen, self)
 
-        self.current_image += self.gradent_animate
+        self.current_image += self.gradient_animate
 
         if self.current_image >= len(self.images) - 1:
             self.current_image = len(self.images) - 1

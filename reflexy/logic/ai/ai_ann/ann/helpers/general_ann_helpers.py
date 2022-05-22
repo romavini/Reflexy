@@ -1,8 +1,11 @@
-import os
 import json
+import os
 from typing import Any, List
+
+import numpy as np  # type: ignore
+import pygame  # type: ignore
 from reflexy.constants import (
-    BUTTOM_INCRESE_WHEN_HOVER,
+    BUTTOM_INCREASE_WHEN_HOVER,
     SCORE_FONT,
     SCORE_FONT_SIZE,
     SCREEN_HEIGHT,
@@ -10,8 +13,6 @@ from reflexy.constants import (
     SCREEN_WIDTH_AI,
 )
 from reflexy.helpers.general_helpers import create_text
-import numpy as np  # type: ignore
-import pygame  # type: ignore
 
 
 def read_weights(read: str, local_dir: str = "../"):
@@ -33,7 +34,7 @@ def read_weights(read: str, local_dir: str = "../"):
 
 
 def draw_buttons(runner: Any, keyboard: List[Any]):
-    """Draw buttons in autonomos mode
+    """Draw buttons in autonomous mode
 
     Keyword arguments:
     runner -- class of game
@@ -54,10 +55,10 @@ def draw_buttons(runner: Any, keyboard: List[Any]):
                 runner.screen,
                 key.color_dark,
                 [
-                    key.button_pos[0] - BUTTOM_INCRESE_WHEN_HOVER,
-                    key.button_pos[1] - BUTTOM_INCRESE_WHEN_HOVER,
-                    key.button_width_n_height[0] + BUTTOM_INCRESE_WHEN_HOVER,
-                    key.button_width_n_height[1] + BUTTOM_INCRESE_WHEN_HOVER,
+                    key.button_pos[0] - BUTTOM_INCREASE_WHEN_HOVER,
+                    key.button_pos[1] - BUTTOM_INCREASE_WHEN_HOVER,
+                    key.button_width_n_height[0] + BUTTOM_INCREASE_WHEN_HOVER,
+                    key.button_width_n_height[1] + BUTTOM_INCREASE_WHEN_HOVER,
                 ],
             )
         else:
@@ -98,7 +99,7 @@ def update_generation(
     )
     create_text(
         runner.screen,
-        "Geneation = " + str(generation + 1),
+        "Generation = " + str(generation + 1),
         (SCREEN_WIDTH + SCREEN_WIDTH_AI // 2, SCREEN_HEIGHT // 8 * 2),
         size=SCORE_FONT_SIZE,
         font_name=SCORE_FONT,

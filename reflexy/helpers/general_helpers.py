@@ -1,11 +1,12 @@
+import math
 import os
 import sys
-import numpy as np  # type: ignore
-from reflexy.constants import SCREEN_HEIGHT, SCREEN_WIDTH, TEXT_FONT, TEXT_FONT_SIZE
-from reflexy.helpers.math import segments_intersect, get_relative_distance_point
 from typing import List, Tuple
+
+import numpy as np  # type: ignore
 import pygame  # type: ignore
-import math
+from reflexy.constants import SCREEN_HEIGHT, SCREEN_WIDTH, TEXT_FONT, TEXT_FONT_SIZE
+from reflexy.helpers.math_helpers import get_relative_distance_point, segments_intersect
 
 
 def exit_game():
@@ -106,7 +107,7 @@ def vision(
     width=1,
     draw=True,
     draw_infos=False,
-):
+) -> List[float]:
     """"""
     if draw:
         draw_box(
@@ -200,9 +201,9 @@ def vision(
                 point_of_contact = start_pos
 
                 for enemy in enemies_in_sight:
-                    for segment_hitbox in enemy.hit_box:
+                    for segment_hit_box in enemy.hit_box:
                         intersect_enemy = segments_intersect(
-                            [start_pos, end_pos], segment_hitbox
+                            [start_pos, end_pos], segment_hit_box
                         )
 
                         if intersect_enemy:
@@ -289,22 +290,22 @@ def vision(
 
         return vec_laser_vision, local_color, local_width, segment
 
-    vec_wall_vision = []
-    vec_enemy_vision = []
-    vec_laser_vision = []
+    vec_wall_vision: List[float] = []
+    vec_enemy_vision: List[float] = []
+    vec_laser_vision: List[float] = []
 
     if not (self_allies is None):
-        vec_ally_vision = []
+        vec_ally_vision: List[float] = []
 
     for ang in range(0, 360, 18):
         local_color = color
         local_width = width
-        v_disloc = math.sin(math.radians(ang))
-        h_disloc = math.cos(math.radians(ang))
+        v_dislocation = math.sin(math.radians(ang))
+        h_dislocation = math.cos(math.radians(ang))
 
         start_pos = (
-            int(self_sprite.center[0] - v_disloc * vision_length),
-            int(self_sprite.center[1] + h_disloc * vision_length),
+            int(self_sprite.center[0] - v_dislocation * vision_length),
+            int(self_sprite.center[1] + h_dislocation * vision_length),
         )
         end_pos = (self_sprite.center[0], self_sprite.center[1])
 
@@ -440,15 +441,15 @@ def vision(
                     create_text(
                         screen,
                         str(round(e, 2)),
-                        [x, y + (i * 10 - 10)],
+                        (x, y + (i * 10 - 10)),
                         pygame.Color(color),
                         size=16,
                     )
 
     # Laser detection in Hit box
-    vec_laser_hitbox_vision = []
+    vec_laser_hit_box_vision = []
 
-    # Player hitbox
+    # Player hit box
     if other_has_group:
         laser_detect = False
 
@@ -464,16 +465,16 @@ def vision(
                 laser_detect = True
 
         if laser_detect:
-            vec_laser_hitbox_vision.append(1)
+            vec_laser_hit_box_vision.append(1)
             draw_box(
                 screen,
                 self_sprite,
                 color=pygame.Color("blue"),
             )
         else:
-            vec_laser_hitbox_vision.append(0)
+            vec_laser_hit_box_vision.append(0)
 
-    # Spider hitbox
+    # Spider hit box
     elif not (self_allies is None):
         ally_laser_detected = False
 
@@ -488,16 +489,16 @@ def vision(
                     ally_laser_detected = True
 
         if ally_laser_detected:
-            vec_laser_hitbox_vision.append(1)
+            vec_laser_hit_box_vision.append(1)
             draw_box(
                 screen,
                 self_sprite,
                 color=pygame.Color("blue"),
             )
         else:
-            vec_laser_hitbox_vision.append(0)
+            vec_laser_hit_box_vision.append(0)
 
-    # Spider hitbox
+    # Spider hit box
     else:
         laser_detect = False
 
@@ -514,24 +515,24 @@ def vision(
             pass
 
         if has_intersect:
-            vec_laser_hitbox_vision.append(1)
+            vec_laser_hit_box_vision.append(1)
             draw_box(
                 screen,
                 self_sprite,
                 color=pygame.Color("blue"),
             )
         else:
-            vec_laser_hitbox_vision.append(0)
+            vec_laser_hit_box_vision.append(0)
 
     vec_vision = vec_enemy_vision
     vec_vision.extend(vec_laser_vision)
-    vec_vision.extend(vec_laser_hitbox_vision)
+    vec_vision.extend(vec_laser_hit_box_vision)
     vec_vision.extend(vec_wall_vision)
 
     if not (self_allies is None):
         vec_vision.extend(vec_ally_vision)
 
-    vec_vision = np.array(vec_vision)
+    vec_vision = np.array(vec_vision)  # type: ignore
 
     return vec_vision
 
@@ -565,6 +566,12 @@ def get_surface(
         angle,
         scale,
     )
+
+
+def get_sound_path(filename: str, folder: str = "../../sounds") -> str:
+    if not filename:
+        raise TypeError("Missing filename argument.")
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), folder, filename))
 
 
 def get_font_path(filename: str, folder: str = "../../fonts") -> str:
@@ -608,9 +615,9 @@ def create_text(
     text -- text to be printed
     pos_center -- tuple with the center position
     color -- Tuple with RBG values
-    size -- size of the image (defalt 18)
-    font_name -- name of the font (defalt "Comic Sans")
-    bold -- bold of the font (defalt False)
+    size -- size of the image (default 18)
+    font_name -- name of the font (default "Comic Sans")
+    bold -- bold of the font (default False)
     """
     if not isinstance(font_name, str):
         raise TypeError(f"Font name must be a string. Got {type(font_name)}.")

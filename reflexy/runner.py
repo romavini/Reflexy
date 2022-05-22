@@ -1,32 +1,37 @@
-from reflexy.menus.elements import keyboard_keys
-from ann.helpers.general_ann_helpers import update_generation  # type: ignore
-import pygame  # type: ignore
 import time
+from typing import Dict
+
+import pygame  # type: ignore
+from ann.helpers.general_ann_helpers import update_generation  # type: ignore
+
 from reflexy.constants import (
-    MAX_SPAWN_SPIDER,
-    SCREEN_WIDTH,
-    SCREEN_HEIGHT,
     CAPTION,
     CLOCK_TICK_GAME_SPEED,
     CLOCK_TICK_REFERENCE,
-    SCORE_FONT_SIZE,
+    COOLDOWN_PLAYER_IMMUNE,
+    MAX_SPAWN_SPIDER,
     SCORE_FONT,
+    SCORE_FONT_SIZE,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
     SCREEN_WIDTH_AI,
     TIME_SPAWN_SPIDER,
-    COOLDOWN_PLAYER_IMMUNE,
 )
 from reflexy.helpers.general_helpers import (
     create_text,
     exit_game,
     get_image_path,
+    get_sound_path,
 )
-from reflexy.models.player import Player
+from reflexy.menus.elements import keyboard_keys
 from reflexy.models.laser_spider import LaserSpider
+from reflexy.models.player import Player
 
 
 class Runner:
     def __init__(
         self,
+        volume: Dict[str, float],
         screen=None,
         autonomous=False,
         training=False,
@@ -56,12 +61,14 @@ class Runner:
 
         self.clock = pygame.time.Clock()
         self.background = self.create_background("background-field.png")
+        self.volume = volume
 
-        self.time_refence = time.time()
-        self.time_display = self.time_refence - self.time_refence
-        self.time = self.time_refence
+        self.time_reference = time.time()
+        self.time_display = self.time_reference - self.time_reference
+        self.time = self.time_reference
         self.last_time = self.time
         self.time_game()
+        self.play_bg_sound(volume=volume["master"] * volume["music"])
 
         self.allow_restart = allow_restart
 
@@ -74,18 +81,11 @@ class Runner:
         self.player = Player(
             self.screen,
             self.time,
+            (self.volume["master"] * self.volume["effects"]),
             self.autonomous,
             self.show_vision,
             W_player_matrix,
             b_player_matrix,
-        )
-        self.enemy_group.add(
-            LaserSpider(
-                self.screen,
-                self.time,
-                autonomous=False,
-                show_vision=False,
-            )
         )
         self.player_group.add(self.player)
         self.player_hit = False
@@ -118,8 +118,14 @@ class Runner:
             * CLOCK_TICK_GAME_SPEED
             / CLOCK_TICK_REFERENCE
         )
-        self.time_display = round(self.time - self.time_refence, 1)
+        self.time_display = round(self.time - self.time_reference, 1)
         self.last_time = time.time()
+
+    def play_bg_sound(self, volume: float):
+        sound_path = get_sound_path("BG.wav")
+        self.sound = pygame.mixer.Sound(sound_path)
+        self.sound.play(-1)
+        self.sound.set_volume(volume)
 
     def has_collision(self) -> bool:
         """Check collisions in each frame."""
@@ -212,8 +218,9 @@ class Runner:
             LaserSpider(
                 self.screen,
                 self.time,
+                (self.volume["master"] * self.volume["effects"]),
                 autonomous=False,
-                show_vision=False,
+                show_vision=self.show_vision,
             )
         )
 
@@ -234,7 +241,7 @@ class Runner:
         """Check game events in each frame."""
         if (
             self.time - self.cd_spawn_spider > TIME_SPAWN_SPIDER
-            and len(self.enemy_group) <= MAX_SPAWN_SPIDER
+            and (len(self.enemy_group) + 1) <= MAX_SPAWN_SPIDER
         ):
             self.respawn_spider()
             self.cd_spawn_spider = self.time
@@ -244,7 +251,7 @@ class Runner:
                 exit_game()
 
             if event.type == pygame.KEYDOWN:
-                self.player.keydown(event.key)
+                self.player.key_down(event.key)
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_ESCAPE:
@@ -256,7 +263,7 @@ class Runner:
                 if event.key == pygame.K_SPACE:
                     self.player.attack()
 
-                self.player.keyup(event.key)
+                self.player.key_up(event.key)
 
     def update_score_lives(self):
         """Update player's lives and score."""
@@ -318,6 +325,8 @@ class Runner:
             if not (time is None):
                 if self.time_display >= time:
                     break
+
+        self.sound.stop()
 
         if self.autonomous:
             return (

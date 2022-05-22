@@ -1,30 +1,32 @@
-from reflexy.logic.ai.ai_ann.ann.ann import annBrain
 from typing import Any
+
 import pygame  # type: ignore
-from reflexy.helpers.math import calc_acceleration
-from reflexy.helpers.general_helpers import (
-    get_hit_box,
-    get_surface,
-    vision,
-)
 from reflexy.constants import (
-    LAYERS,
-    PLAYER_VISION_RANGE,
-    PLAYER_VISION_CHANNELS,
-    SCREEN_WIDTH,
-    SCREEN_HEIGHT,
-    PLAYER_SPEED,
-    PLAYER_WIDTH,
-    PLAYER_HEIGHT,
     COOLDOWN_PLAYER_SWORD,
-    START_HP,
-    TIME_PLAYER_BLINK,
+    LAYERS,
     PLAYER_ACCELERATION,
     PLAYER_ACCELERATION_FUNC,
     PLAYER_DECELERATION,
     PLAYER_DECELERATION_FUNC,
+    PLAYER_HEIGHT,
     PLAYER_OUTPUTS,
+    PLAYER_SPEED,
+    PLAYER_VISION_CHANNELS,
+    PLAYER_VISION_RANGE,
+    PLAYER_WIDTH,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+    START_HP,
+    TIME_PLAYER_BLINK,
 )
+from reflexy.helpers.general_helpers import (
+    get_hit_box,
+    get_sound_path,
+    get_surface,
+    vision,
+)
+from reflexy.helpers.math_helpers import calc_acceleration
+from reflexy.logic.ai.ai_ann.ann.ann import annBrain
 
 
 class Player(pygame.sprite.Sprite):
@@ -32,6 +34,7 @@ class Player(pygame.sprite.Sprite):
         self,
         screen: pygame.Surface,
         time: int,
+        volume: float,
         autonomous: bool = False,
         show_vision: bool = True,
         W=None,
@@ -40,7 +43,7 @@ class Player(pygame.sprite.Sprite):
         if time is None:
             raise TypeError("Missing argument.")
         elif not (isinstance(time, int) or isinstance(time, float)):
-            raise TypeError(f"Timemust be float or integer. Got {type(time)}.")
+            raise TypeError(f"Time must be float or integer. Got {type(time)}.")
 
         pygame.sprite.Sprite.__init__(self)
 
@@ -50,6 +53,7 @@ class Player(pygame.sprite.Sprite):
 
         self.screen = screen
         self.time = time
+        self.volume = volume
         self.autonomous = autonomous
         self.show_vision = show_vision
         self.brain = None
@@ -98,8 +102,8 @@ class Player(pygame.sprite.Sprite):
         self.speed = 0
         self.current_speed = None
         self.acc_tracker = None
-        self.state_of_moviment = "accelerating"
-        self.last_state_of_moviment = None
+        self.state_of_movement = "accelerating"
+        self.last_state_of_movement = None
 
         self.hit_box = get_hit_box(self)
 
@@ -167,7 +171,7 @@ class Player(pygame.sprite.Sprite):
 
             self.handle_multiple_keys()
 
-        self.update_state_of_moviment()
+        self.update_state_of_movement()
         self.set_velocity()
         self.move_player()
 
@@ -193,9 +197,18 @@ class Player(pygame.sprite.Sprite):
             if self.blinking_damage:
                 self.image = get_surface("player-w-sword-damage.png", scale=1)
 
+    def play_sword_sound(self):
+        sound_path = get_sound_path("mixkit-dagger-woosh-1487.wav")
+        sound = pygame.mixer.Sound(sound_path)
+        sound.play()
+        sound.set_volume(self.volume)
+
     def attack(self):
         """Sword attack."""
-        if self.attacking or self.time - self.cd_attack > COOLDOWN_PLAYER_SWORD:
+        if self.attacking or (self.time - self.cd_attack) > COOLDOWN_PLAYER_SWORD:
+            if not self.attacking:
+                self.play_sword_sound()
+
             self.attacking = True
             self.current_image += 1
 
@@ -206,7 +219,7 @@ class Player(pygame.sprite.Sprite):
 
             self.image = self.images[self.current_image]
 
-    def update_state_of_moviment(self):
+    def update_state_of_movement(self):
         if (
             True
             in [
@@ -215,9 +228,9 @@ class Player(pygame.sprite.Sprite):
                 self.move_right,
                 self.move_left,
             ]
-            and self.state_of_moviment in ["stoped", "decelerating"]
+            and self.state_of_movement in ["stopped", "decelerating"]
         ):
-            self.state_of_moviment = "accelerating"
+            self.state_of_movement = "accelerating"
 
         if True not in [
             self.move_up,
@@ -225,7 +238,7 @@ class Player(pygame.sprite.Sprite):
             self.move_right,
             self.move_left,
         ]:
-            self.state_of_moviment = "decelerating"
+            self.state_of_movement = "decelerating"
 
     def handle_multiple_keys(self):
         """Handle cases when multiple keys are selected."""
@@ -237,7 +250,7 @@ class Player(pygame.sprite.Sprite):
             self.move_up = False
             self.move_down = False
 
-    def keydown(self, key):
+    def key_down(self, key):
         """key system
 
         Keyword arguments:
@@ -264,9 +277,9 @@ class Player(pygame.sprite.Sprite):
             self.move_down = True
             self.vertical_acc = "down"
 
-        self.update_state_of_moviment()
+        self.update_state_of_movement()
 
-    def keyup(self, key):
+    def key_up(self, key):
         """key system
 
         Keyword arguments:
@@ -285,7 +298,7 @@ class Player(pygame.sprite.Sprite):
         elif key == pygame.K_DOWN or key == pygame.K_s:
             self.move_down = False
 
-        self.update_state_of_moviment()
+        self.update_state_of_movement()
 
     def set_velocity(self):
         """Acceleration system, set the state of movement."""
@@ -295,8 +308,8 @@ class Player(pygame.sprite.Sprite):
         if not (self.move_left or self.move_right) and (self.move_up or self.move_down):
             self.horizontal_acc = None
 
-        if self.state_of_moviment == "accelerating" and self.speed < PLAYER_SPEED:
-            if not self.acc_tracker or self.last_state_of_moviment == "decelerating":
+        if self.state_of_movement == "accelerating" and self.speed < PLAYER_SPEED:
+            if not self.acc_tracker or self.last_state_of_movement == "decelerating":
                 self.acc_tracker = self.time
 
             if not self.speed:
@@ -311,24 +324,23 @@ class Player(pygame.sprite.Sprite):
             self.speed = (
                 calc_acceleration(
                     PLAYER_ACCELERATION_FUNC,
-                    self.time,
-                    self.acc_tracker,
+                    self.time - self.acc_tracker,
                     PLAYER_ACCELERATION,
                 )
                 * self.current_speed
             )
 
-            self.last_state_of_moviment = "accelerating"
+            self.last_state_of_movement = "accelerating"
 
-        if self.speed > PLAYER_SPEED or self.state_of_moviment == "keep":
+        if self.speed > PLAYER_SPEED or self.state_of_movement == "keep":
             self.speed = PLAYER_SPEED
-            self.state_of_moviment = "keep"
+            self.state_of_movement = "keep"
             self.acc_tracker = None
             self.current_speed = None
-            self.last_state_of_moviment = "keep"
+            self.last_state_of_movement = "keep"
 
-        elif self.state_of_moviment == "decelerating":
-            if not self.acc_tracker or self.last_state_of_moviment == "accelerating":
+        elif self.state_of_movement == "decelerating":
+            if not self.acc_tracker or self.last_state_of_movement == "accelerating":
                 self.acc_tracker = self.time
 
             if self.speed != PLAYER_SPEED and self.current_speed is None:
@@ -340,43 +352,42 @@ class Player(pygame.sprite.Sprite):
                 1
                 - calc_acceleration(
                     PLAYER_DECELERATION_FUNC,
-                    self.time,
-                    self.acc_tracker,
+                    self.time - self.acc_tracker,
                     PLAYER_DECELERATION,
                 )
             ) * self.current_speed
 
-            self.last_state_of_moviment = "decelerating"
+            self.last_state_of_movement = "decelerating"
 
-        if self.speed < 0 and self.state_of_moviment == "decelerating":
-            self.state_of_moviment = "stoped"
+        if self.speed < 0 and self.state_of_movement == "decelerating":
+            self.state_of_movement = "stopped"
             self.speed = 0
             self.acc_tracker = None
             self.current_speed = None
             self.horizontal_acc = None
             self.vertical_acc = None
-            self.last_state_of_moviment = "stoped"
+            self.last_state_of_movement = "stopped"
 
     def move_player(self):
         """Movement system."""
         if self.rect.bottom < (SCREEN_HEIGHT + PLAYER_HEIGHT // 2) and (
             self.move_down
             or (
-                self.state_of_moviment == "decelerating" and self.vertical_acc == "down"
+                self.state_of_movement == "decelerating" and self.vertical_acc == "down"
             )
         ):
             self.rect.top += self.speed
 
         if (self.rect.top > 0 - PLAYER_WIDTH // 2) and (
             self.move_up
-            or (self.state_of_moviment == "decelerating" and self.vertical_acc == "up")
+            or (self.state_of_movement == "decelerating" and self.vertical_acc == "up")
         ):
             self.rect.top -= self.speed
 
         if (self.rect.left > 0 - PLAYER_WIDTH // 2) and (
             self.move_left
             or (
-                self.state_of_moviment == "decelerating"
+                self.state_of_movement == "decelerating"
                 and self.horizontal_acc == "left"
             )
         ):
@@ -385,7 +396,7 @@ class Player(pygame.sprite.Sprite):
         if (self.rect.right < SCREEN_WIDTH + PLAYER_HEIGHT // 2) and (
             self.move_right
             or (
-                self.state_of_moviment == "decelerating"
+                self.state_of_movement == "decelerating"
                 and self.horizontal_acc == "right"
             )
         ):

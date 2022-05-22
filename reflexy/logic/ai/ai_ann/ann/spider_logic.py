@@ -1,6 +1,8 @@
-from ann.helpers.general_ann_helpers import read_weights
-from typing import List
+from typing import List, Tuple
+
 import numpy as np  # type: ignore
+
+from ann.helpers.general_ann_helpers import read_weights
 
 
 class Brain:
@@ -35,14 +37,14 @@ class Brain:
             self.b.append(self.params[f"b{i}"])
 
     @staticmethod
-    def func_relu(list_in: List[float]) -> List[float]:
+    def func_relu(list_in: List[float]) -> np.ndarray:
         return np.array([0 if e < 0 else e for e in list_in])
 
     @staticmethod
-    def action_ativation(out_layer: List[float]) -> List[bool]:
+    def action_activation(out_layer: List[float]) -> List[bool]:
         return [False if e < 0.5 else True for e in out_layer]
 
-    def analyze(self, vec_vision):
+    def analyze(self, vec_vision: np.ndarray) -> Tuple[float]:
         out_layer = vec_vision.dot(self.W[0]) + self.b[0]
         out_layer = self.func_relu(out_layer)  # ReLU
         self.params["out_layer_1"] = out_layer

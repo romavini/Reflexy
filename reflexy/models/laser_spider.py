@@ -1,37 +1,36 @@
 import math
-from reflexy.helpers.moviments import autonomous_spider_vision
-import pygame
 import random
 from typing import Optional
-from reflexy.helpers.math import (
-    angle2_pi_minus_pi,
-    aim,
-    calc_acceleration,
-)
-from reflexy.helpers.general_helpers import (
-    get_hit_box,
-    get_surface,
-    vision,
-)
+
+import pygame
 from reflexy.constants import (
-    SCREEN_WIDTH,
-    SCREEN_HEIGHT,
-    SPIDER_SPEED,
-    SPIDER_VISION_RANGE,
-    SPIDER_VISION_CHANNELS,
+    COOLDOWN_SPIDER_FIRE,
     LAYERS,
-    SPIDER_WIDTH,
-    SPIDER_HEIGHT,
-    SPIDER_EYE_X,
-    SPIDER_EYE_Y,
+    RAY_ANIMATION_TIME,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
     SPIDER_ACCELERATION,
     SPIDER_ACCELERATION_FUNC,
     SPIDER_DECELERATION,
     SPIDER_DECELERATION_FUNC,
-    COOLDOWN_SPIDER_FIRE,
-    RAY_ANIMATION_TIME,
+    SPIDER_EYE_X,
+    SPIDER_EYE_Y,
+    SPIDER_HEIGHT,
     SPIDER_OUTPUTS,
+    SPIDER_SPEED,
+    SPIDER_VISION_CHANNELS,
+    SPIDER_VISION_RANGE,
+    SPIDER_WIDTH,
 )
+from reflexy.helpers.general_helpers import (
+    get_hit_box,
+    get_sound_path,
+    get_surface,
+    vision,
+)
+from reflexy.helpers.math_helpers import aim, calc_acceleration
+from reflexy.helpers.moviments import autonomous_spider_vision
+from reflexy.logic.ai.ai_ann.ann.spider_logic import Brain
 from reflexy.models.weapons.ray import Ray
 
 
@@ -40,6 +39,7 @@ class LaserSpider(pygame.sprite.Sprite):
         self,
         screen: pygame.Surface,
         time: Optional[int],
+        volume: float,
         autonomous: bool = False,
         show_vision: bool = True,
         W=None,
@@ -48,15 +48,18 @@ class LaserSpider(pygame.sprite.Sprite):
         if time is None:
             raise TypeError("Missing argument.")
         elif not (isinstance(time, int) or isinstance(time, float)):
-            raise TypeError(f"Timemust be float or integer. Got {type(time)}.")
+            raise TypeError(f"Time must be float or integer. Got {type(time)}.")
 
         pygame.sprite.Sprite.__init__(self)
 
         self.W = W
         self.b = b
 
+        self.aim_angle_rad = None
+
         self.screen = screen
         self.time = time
+        self.volume = volume
         self.autonomous = autonomous
         self.show_vision = show_vision
         self.brain = None
@@ -104,7 +107,7 @@ class LaserSpider(pygame.sprite.Sprite):
         self.hit_box = get_hit_box(self)
 
         if self.show_vision or self.autonomous:
-            spider_vision = vision(
+            self.spider_vision = vision(
                 self.screen,
                 self,
                 player_sprite,
@@ -160,14 +163,20 @@ class LaserSpider(pygame.sprite.Sprite):
         ):
             self.fire(player_sprite)
 
+    def play_spawn_sound(self):
+        sound_path = get_sound_path("mixkit-robot-retract-mechanism-1405.wav")
+        sound = pygame.mixer.Sound(sound_path)
+        sound.play()
+        sound.set_volume(self.volume)
+
     def fire(self, player_sprite):
-        if not self.firing and self.state_of_movement == "stoped":
+        if not self.firing and self.state_of_movement == "stopped":
             self.firing = True
         elif not self.firing and self.time - self.cd_tracker > COOLDOWN_SPIDER_FIRE:
             self.state_of_movement = "decelerating"
 
         if self.firing:
-            if self.state_of_movement == "stoped":
+            if self.state_of_movement == "stopped":
                 self.state_of_movement = "recoil"
 
             if not self.cd_init_fire:
@@ -201,8 +210,7 @@ class LaserSpider(pygame.sprite.Sprite):
             self.speed = (
                 calc_acceleration(
                     SPIDER_ACCELERATION_FUNC,
-                    self.time,
-                    self.acc_tracker,
+                    self.time - self.acc_tracker,
                     SPIDER_ACCELERATION,
                 )
                 * SPIDER_SPEED
@@ -216,8 +224,7 @@ class LaserSpider(pygame.sprite.Sprite):
                 1
                 - calc_acceleration(
                     SPIDER_DECELERATION_FUNC,
-                    self.time,
-                    self.acc_tracker,
+                    self.time - self.acc_tracker,
                     SPIDER_DECELERATION,
                 )
             ) * SPIDER_SPEED
@@ -234,8 +241,7 @@ class LaserSpider(pygame.sprite.Sprite):
                 self.speed = -(
                     calc_acceleration(
                         "exp",
-                        self.time,
-                        self.acc_tracker,
+                        self.time - self.acc_tracker,
                         RAY_ANIMATION_TIME * 0.8,
                     )
                     * SPIDER_SPEED
@@ -250,7 +256,7 @@ class LaserSpider(pygame.sprite.Sprite):
             self.acc_tracker = None
 
         elif self.state_of_movement == "decelerating" and self.speed <= 0.001:
-            self.state_of_movement = "stoped"
+            self.state_of_movement = "stopped"
             self.speed = 0
             self.acc_tracker = None
 
@@ -329,7 +335,7 @@ class LaserSpider(pygame.sprite.Sprite):
         screen -- surface to print
         player_sprite -- Sequence of player's center coordinates
         """
-        angle = math.degrees(self.aim_angle_rad)
+        angle = math.degrees(self.aim_angle_rad)  # type: ignore
         self.ray = Ray(
             screen,
             self.eye_aim,
@@ -341,6 +347,7 @@ class LaserSpider(pygame.sprite.Sprite):
 
     def spawn_spider(self):
         """spawn the spider sprite in a random position"""
+        self.play_spawn_sound()
         axis = ["top", "bot"][random.randint(0, 1)]
         side = ["left", "right"][random.randint(0, 1)]
 

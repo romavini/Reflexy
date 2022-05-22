@@ -1,8 +1,4 @@
-from reflexy.logic.ai.ai_ga.ga.ga_player import GeneticAlgorithm
-from reflexy.runner import Runner
-from reflexy.menus.elements import createButton
 import pygame  # type: ignore
-from reflexy.helpers.general_helpers import create_text, exit_game
 from reflexy.constants import (
     CAPTION,
     SCREEN_HEIGHT,
@@ -11,6 +7,10 @@ from reflexy.constants import (
     TITLE_FONT,
     TITLE_FONT_SIZE,
 )
+from reflexy.helpers.general_helpers import create_text, exit_game, get_sound_path
+from reflexy.logic.ai.ai_ga.ga.ga_player import GeneticAlgorithm
+from reflexy.menus.elements import createButton
+from reflexy.runner import Runner
 
 
 def restart(runner, allow_restart=True):
@@ -37,9 +37,10 @@ def restart(runner, allow_restart=True):
     ]
 
     runner.screen.blit(runner.background, (0, 0))
+    menu = Menu(runner.volume)
 
     while True:
-        check_events(runner.screen, main_menu_buttons)
+        menu.check_events(runner.screen, main_menu_buttons, runner.volume)
 
         create_text(
             runner.screen,
@@ -81,13 +82,12 @@ def create_screen():
 
 
 def check_mouse(button, mouse_pos):
-    """Return and check a button was clickd
+    """Return and check a button was clicked
 
     Keyword arguments:
-    button -- bottun to check
-    mouse_pos -- mouse posistion
+    button -- button to check
+    mouse_pos -- mouse position
     """
-
     return (
         button.button_pos[0]
         <= mouse_pos[0]
@@ -98,143 +98,192 @@ def check_mouse(button, mouse_pos):
     )
 
 
-def check_events(screen, buttons):
-    """"""
-    mouse_pos = pygame.mouse.get_pos()
-    button_return = False
+class Menu:
+    def __init__(self, volume={"master": 1, "music": 1, "effects": 1}):
+        self.volume = volume
+        self.sound_running = False
+        self.button_sound_switch = None
 
-    for event in pygame.event.get():
+        pygame.init()
+        self.screen, self.clock = create_screen()
 
-        if event.type == pygame.QUIT:
-            exit_game()
+        self.play_bg_sound()
 
-        # checks if a mouse is clicked
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            for button in buttons:
-                if check_mouse(button, mouse_pos):
-                    if button.id == "play":
-                        runner = Runner(
-                            autonomous=False, show_vision=False, allow_restart=True
-                        )
-                        while True:
-                            runner.run()
-                            restart(runner)
+    def check_events(self, screen, buttons, volume):
+        """"""
+        mouse_pos = pygame.mouse.get_pos()
+        button_return = False
 
-                    elif button.id == "ai":
-                        ai_menu(screen)
+        for event in pygame.event.get():
 
-                    elif button.id == "settings":
-                        pass
-
-                    elif button.id == "train":
-                        ga = GeneticAlgorithm(screen)
-
-                    elif button.id == "execute":
-                        pass
-
-                    elif button.id == "return":
-                        button_return = True
-
-                    elif button.id == "quit":
-                        exit_game()
-
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
+            if event.type == pygame.QUIT:
                 exit_game()
 
-        for button in buttons:
-            if check_mouse(button, mouse_pos):
-                pygame.draw.rect(
+            # checks if a mouse is clicked
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                for button in buttons:
+                    if check_mouse(button, mouse_pos):
+                        if button.id == "play":
+                            self.sound.stop()
+                            runner = Runner(
+                                volume=volume,
+                                screen=screen,
+                                autonomous=False,
+                                show_vision=False,
+                                allow_restart=True,
+                            )
+                            while True:
+                                runner.run()
+                                restart(runner)
+
+                        elif button.id == "ai":
+                            self.ai_menu(screen)
+
+                        elif button.id == "settings":
+                            self.settings_menu(screen, self.volume)
+
+                        elif button.id == "train":
+                            ga = GeneticAlgorithm(screen)
+                            ga.run()
+                        elif button.id == "execute":
+                            pass
+
+                        elif button.id == "return":
+                            button_return = True
+
+                        elif button.id == "quit":
+                            exit_game()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    exit_game()
+
+            for button in buttons:
+                if check_mouse(button, mouse_pos):
+                    if self.button_sound_switch is None:
+                        self.play_button_sound()
+                        self.button_sound_switch = button
+
+                    pygame.draw.rect(
+                        screen,
+                        button.color_light,
+                        [
+                            button.button_pos[0],
+                            button.button_pos[1],
+                            button.button_width_n_height[0],
+                            button.button_width_n_height[1],
+                        ],
+                    )
+                else:
+                    if self.button_sound_switch == button:
+                        self.button_sound_switch = None
+
+                        pygame.draw.rect(
+                            screen,
+                            button.color_dark,
+                            [
+                                button.button_pos[0],
+                                button.button_pos[1],
+                                button.button_width_n_height[0],
+                                button.button_width_n_height[1],
+                            ],
+                        )
+                    pygame.draw.rect(
+                        screen,
+                        button.color_dark,
+                        [
+                            button.button_pos[0],
+                            button.button_pos[1],
+                            button.button_width_n_height[0],
+                            button.button_width_n_height[1],
+                        ],
+                    )
+
+                create_text(
                     screen,
-                    button.color_light,
-                    [
-                        button.button_pos[0],
-                        button.button_pos[1],
-                        button.button_width_n_height[0],
-                        button.button_width_n_height[1],
-                    ],
+                    button.text,
+                    button.center_rect,
+                    button.text_color,
+                    button.text_size,
+                    button.font_name,
                 )
 
-            else:
-                pygame.draw.rect(
-                    screen,
-                    button.color_dark,
-                    [
-                        button.button_pos[0],
-                        button.button_pos[1],
-                        button.button_width_n_height[0],
-                        button.button_width_n_height[1],
-                    ],
-                )
+        return button_return
 
+    def ai_menu(self, screen):
+        """"""
+        self.button_sound_switch = None
+
+        train_button = createButton("Train", "train", (100, 100), (160, 60))
+        execute_button = createButton("Execute", "execute", (100, 200), (160, 60))
+        return_button = createButton("Return", "return", (100, 300), (160, 60))
+        ai_menu_buttons = [
+            train_button,
+            execute_button,
+            return_button,
+        ]
+        fill_screen(screen)
+
+        while True:
             create_text(
                 screen,
-                button.text,
-                button.center_rect,
-                button.text_color,
-                button.text_size,
-                button.font_name,
+                "Reflexy",
+                (SCREEN_WIDTH // 2 + 200, SCREEN_HEIGHT // 4),
+                size=TITLE_FONT_SIZE,
+                font_name=TITLE_FONT,
             )
 
-    return button_return
+            button_return = self.check_events(screen, ai_menu_buttons, self.volume)
 
+            if button_return:
+                self.button_sound_switch = None
+                fill_screen(screen)
+                break
 
-def ai_menu(screen):
-    """"""
-    train_button = createButton("Train", "train", (100, 100), (160, 60))
-    execute_button = createButton("Execute", "execute", (100, 200), (160, 60))
-    return_button = createButton("Return", "return", (100, 300), (160, 60))
-    ai_menu_buttons = [
-        train_button,
-        execute_button,
-        return_button,
-    ]
-    fill_screen(screen)
+            pygame.display.update()
 
-    while True:
-        create_text(
-            screen,
-            "Reflexy",
-            (SCREEN_WIDTH // 2 + 200, SCREEN_HEIGHT // 4),
-            size=TITLE_FONT_SIZE,
-            font_name=TITLE_FONT,
-        )
+    def settings_menu(self, screen, volume):
+        """"""
+        pass
 
-        button_return = check_events(screen, ai_menu_buttons)
+    def play_button_sound(self):
+        sound_path = get_sound_path("menu button 2 sound effect 33505250.wav")
+        sound = pygame.mixer.Sound(sound_path)
+        sound.play()
+        sound.set_volume(self.volume["master"] * self.volume["effects"])
 
-        if button_return:
-            fill_screen(screen)
-            break
+    def play_bg_sound(self):
+        if not self.sound_running:
+            self.sound_running = True
+            sound_path = get_sound_path("BG.wav")
+            self.sound = pygame.mixer.Sound(sound_path)
+            self.sound.play(-1)
 
-        pygame.display.update()
+        self.sound.set_volume(self.volume["master"] * self.volume["music"])
 
+    def main_menu(self):
+        """"""
+        play_button = createButton("Play", "play", (100, 100), (160, 60))
+        settings_button = createButton("Settings", "settings", (100, 200), (160, 60))
+        ai_button = createButton("AI", "ai", (100, 300), (160, 60))
+        quit_button = createButton("Quit", "quit", (100, 400), (160, 60))
 
-def main_menu():
-    """"""
-    pygame.init()
-    screen, clock = create_screen()
+        main_menu_buttons = [
+            play_button,
+            settings_button,
+            ai_button,
+            quit_button,
+        ]
 
-    play_button = createButton("Play", "play", (100, 100), (160, 60))
-    settings_button = createButton("Settings", "settings", (100, 200), (160, 60))
-    ai_button = createButton("AI", "ai", (100, 300), (160, 60))
-    quit_button = createButton("Quit", "quit", (100, 400), (160, 60))
+        while True:
+            create_text(
+                self.screen,
+                "Reflexy",
+                (SCREEN_WIDTH // 2 + 200, SCREEN_HEIGHT // 4),
+                size=TITLE_FONT_SIZE,
+                font_name=TITLE_FONT,
+            )
 
-    main_menu_buttons = [
-        play_button,
-        settings_button,
-        ai_button,
-        quit_button,
-    ]
+            self.check_events(self.screen, main_menu_buttons, self.volume)
 
-    while True:
-        create_text(
-            screen,
-            "Reflexy",
-            (SCREEN_WIDTH // 2 + 200, SCREEN_HEIGHT // 4),
-            size=TITLE_FONT_SIZE,
-            font_name=TITLE_FONT,
-        )
-
-        check_events(screen, main_menu_buttons)
-
-        pygame.display.update()
+            pygame.display.update()

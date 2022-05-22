@@ -1,13 +1,10 @@
 import json
 from json import JSONEncoder
-from reflexy.helpers.general_helpers import exit_game
+
 import numpy as np  # type: ignore
 from numpy import random  # type: ignore
-from reflexy.constants import (
-    LAYERS,
-    PLAYER_OUTPUTS,
-    PLAYER_VISION_CHANNELS,
-)
+from reflexy.constants import LAYERS, PLAYER_OUTPUTS, PLAYER_VISION_CHANNELS
+from reflexy.helpers.general_helpers import exit_game
 from reflexy.runner import Runner
 
 
@@ -19,24 +16,25 @@ class NumpyArrayEncoder(JSONEncoder):
 
 
 class GeneticAlgorithm:
-    def __init__(self, screen, max_geration=100, population=50, std=1e-1):
+    def __init__(self, screen, max_generation=100, population=50, std=1e-1):
         self.std = std
         self.screen = screen
 
-        self.time_per_simulatiron = 30
+        self.time_per_simulation = 30
         self.local_dir = "../../../params"
         self.player_hp = 1
         self.gen = 0
         self.player_score = None
+        self.population = population
+        self.max_generation = max_generation
 
-        if population < 4:
+    def run(self):
+        if self.population < 4:
             self.population = 4
-        else:
-            self.population = population
 
-        self.create_poulation()
+        self.create_population()
         best_scores = []
-        for generation in range(max_geration):
+        for generation in range(self.max_generation):
             self.gen = generation
             self.run_simulation()
 
@@ -62,7 +60,7 @@ class GeneticAlgorithm:
             )
             print(f"{best_scores = }")
 
-        self.save_last_generation(max_geration)
+        self.save_last_generation(self.max_generation)
 
     def update_details(self):
         """"""
@@ -96,7 +94,7 @@ class GeneticAlgorithm:
                 cls=NumpyArrayEncoder,
             )
 
-    def create_poulation(self):
+    def create_population(self):
         self.params = {}
         self.W_player = []
         self.b_player = []
@@ -111,9 +109,9 @@ class GeneticAlgorithm:
         self.W_player = np.array(self.W_player, dtype=object)
         self.b_player = np.array(self.b_player, dtype=object)
 
-    def create_weights(self, pop, vision, ocult_layers, outputs):
+    def create_weights(self, pop, vision, occult_layers, outputs):
         layers = [vision]
-        layers.extend(ocult_layers)
+        layers.extend(occult_layers)
         layers.extend([outputs])
         self.layers = layers
         local_W = []
@@ -147,7 +145,7 @@ class GeneticAlgorithm:
             )
 
             [time, player_score, player_hp, exit] = runner.run(
-                self.time_per_simulatiron,
+                self.time_per_simulation,
                 generation=self.gen,
                 pop=pop,
                 max_pop=self.population,

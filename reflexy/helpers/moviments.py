@@ -1,7 +1,10 @@
-from reflexy.helpers.math import angle2_pi_minus_pi
+from typing import List
+
+from reflexy.helpers.math_helpers import angle2_pi_minus_pi
+from reflexy.logic.ai.ai_ann.ann.spider_logic import Brain
 
 
-def autonomous_spider_vision(brain, spider_vision):
+def autonomous_spider_vision(brain: Brain, spider_vision: List[int]) -> List[float]:
     """"""
     [
         move_left,

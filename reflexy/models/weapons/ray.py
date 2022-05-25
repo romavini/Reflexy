@@ -15,6 +15,7 @@ class Ray(pygame.sprite.Sprite):
         eye_position,
         id,
         show_vision: bool = True,
+        channel: int = 0,
     ):
         pygame.sprite.Sprite.__init__(self)
 
@@ -23,6 +24,7 @@ class Ray(pygame.sprite.Sprite):
         self.correct_spider_eye = correct_spider_eye
         self.eye_position = eye_position
         self.id = id
+        self.channel = channel
 
         self.images = [
             get_surface(filename, angle=self.current_angle)
@@ -82,12 +84,8 @@ class Ray(pygame.sprite.Sprite):
         ]
 
         point_end = [
-            int(
-                point_start[0] + math.cos(math.radians(self.current_angle)) * RAY_WIDTH
-            ),
-            int(
-                point_start[1] - math.sin(math.radians(self.current_angle)) * RAY_WIDTH
-            ),
+            int(point_start[0] + math.cos(math.radians(self.current_angle)) * RAY_WIDTH),
+            int(point_start[1] - math.sin(math.radians(self.current_angle)) * RAY_WIDTH),
         ]
 
         return (point_start, point_end)

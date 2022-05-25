@@ -1,30 +1,15 @@
 from typing import Any
 
 import pygame  # type: ignore
-from reflexy.constants import (
-    COOLDOWN_PLAYER_SWORD,
-    LAYERS,
-    PLAYER_ACCELERATION,
-    PLAYER_ACCELERATION_FUNC,
-    PLAYER_DECELERATION,
-    PLAYER_DECELERATION_FUNC,
-    PLAYER_HEIGHT,
-    PLAYER_OUTPUTS,
-    PLAYER_SPEED,
-    PLAYER_VISION_CHANNELS,
-    PLAYER_VISION_RANGE,
-    PLAYER_WIDTH,
-    SCREEN_HEIGHT,
-    SCREEN_WIDTH,
-    START_HP,
-    TIME_PLAYER_BLINK,
-)
-from reflexy.helpers.general_helpers import (
-    get_hit_box,
-    get_sound_path,
-    get_surface,
-    vision,
-)
+from reflexy.constants import (COOLDOWN_PLAYER_SWORD, LAYERS,
+                               PLAYER_ACCELERATION, PLAYER_ACCELERATION_FUNC,
+                               PLAYER_DECELERATION, PLAYER_DECELERATION_FUNC,
+                               PLAYER_HEIGHT, PLAYER_OUTPUTS, PLAYER_SPEED,
+                               PLAYER_VISION_CHANNELS, PLAYER_VISION_RANGE,
+                               PLAYER_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH,
+                               START_HP, TIME_PLAYER_BLINK)
+from reflexy.helpers.general_helpers import (get_hit_box, get_surface,
+                                             play_sound, vision)
 from reflexy.helpers.math_helpers import calc_acceleration
 from reflexy.logic.ai.ai_ann.ann.ann import annBrain
 
@@ -37,6 +22,7 @@ class Player(pygame.sprite.Sprite):
         volume: float,
         autonomous: bool = False,
         show_vision: bool = True,
+        channel: int = 0,
         W=None,
         b=None,
     ):
@@ -56,6 +42,7 @@ class Player(pygame.sprite.Sprite):
         self.volume = volume
         self.autonomous = autonomous
         self.show_vision = show_vision
+        self.channel = channel
         self.brain = None
 
         self.images = [
@@ -180,8 +167,8 @@ class Player(pygame.sprite.Sprite):
 
     def set_spawn(self):
         """Spawn player."""
-        self.x = SCREEN_WIDTH / 2
-        self.y = SCREEN_HEIGHT / 2
+        self.x = SCREEN_WIDTH / 2 - PLAYER_WIDTH / 2
+        self.y = SCREEN_HEIGHT / 2 - PLAYER_HEIGHT / 2
         self.center = (self.x + PLAYER_WIDTH / 2, self.y + PLAYER_HEIGHT / 2)
         self.rect = pygame.Rect(self.x, self.y, PLAYER_WIDTH, PLAYER_HEIGHT)
 
@@ -197,11 +184,11 @@ class Player(pygame.sprite.Sprite):
             if self.blinking_damage:
                 self.image = get_surface("player-w-sword-damage.png", scale=1)
 
-    def play_sword_sound(self):
-        sound_path = get_sound_path("mixkit-dagger-woosh-1487.wav")
-        sound = pygame.mixer.Sound(sound_path)
-        sound.play()
-        sound.set_volume(self.volume)
+    def play_sword_sound(self, volume: float = None):
+        """Play sword sound."""
+        if volume is None:
+            volume = self.volume
+        play_sound(volume, sound_name="mixkit-dagger-woosh-1487.wav")
 
     def attack(self):
         """Sword attack."""
@@ -220,16 +207,12 @@ class Player(pygame.sprite.Sprite):
             self.image = self.images[self.current_image]
 
     def update_state_of_movement(self):
-        if (
-            True
-            in [
-                self.move_up,
-                self.move_down,
-                self.move_right,
-                self.move_left,
-            ]
-            and self.state_of_movement in ["stopped", "decelerating"]
-        ):
+        if True in [
+            self.move_up,
+            self.move_down,
+            self.move_right,
+            self.move_left,
+        ] and self.state_of_movement in ["stopped", "decelerating"]:
             self.state_of_movement = "accelerating"
 
         if True not in [
@@ -372,9 +355,7 @@ class Player(pygame.sprite.Sprite):
         """Movement system."""
         if self.rect.bottom < (SCREEN_HEIGHT + PLAYER_HEIGHT // 2) and (
             self.move_down
-            or (
-                self.state_of_movement == "decelerating" and self.vertical_acc == "down"
-            )
+            or (self.state_of_movement == "decelerating" and self.vertical_acc == "down")
         ):
             self.rect.top += self.speed
 
@@ -386,18 +367,12 @@ class Player(pygame.sprite.Sprite):
 
         if (self.rect.left > 0 - PLAYER_WIDTH // 2) and (
             self.move_left
-            or (
-                self.state_of_movement == "decelerating"
-                and self.horizontal_acc == "left"
-            )
+            or (self.state_of_movement == "decelerating" and self.horizontal_acc == "left")
         ):
             self.rect.left -= self.speed
 
         if (self.rect.right < SCREEN_WIDTH + PLAYER_HEIGHT // 2) and (
             self.move_right
-            or (
-                self.state_of_movement == "decelerating"
-                and self.horizontal_acc == "right"
-            )
+            or (self.state_of_movement == "decelerating" and self.horizontal_acc == "right")
         ):
             self.rect.right += self.speed

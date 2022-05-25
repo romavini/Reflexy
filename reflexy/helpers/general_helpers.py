@@ -5,8 +5,10 @@ from typing import List, Tuple
 
 import numpy as np  # type: ignore
 import pygame  # type: ignore
-from reflexy.constants import SCREEN_HEIGHT, SCREEN_WIDTH, TEXT_FONT, TEXT_FONT_SIZE
-from reflexy.helpers.math_helpers import get_relative_distance_point, segments_intersect
+from reflexy.constants import (SCREEN_HEIGHT, SCREEN_WIDTH, TEXT_FONT,
+                               TEXT_FONT_SIZE)
+from reflexy.helpers.math_helpers import (get_relative_distance_point,
+                                          segments_intersect)
 
 
 def exit_game():
@@ -162,9 +164,7 @@ def vision(
                 if intersect:
                     start_pos = intersect
 
-            vec_wall_vision.append(
-                get_relative_distance_point(start_pos, end_pos, vision_length)
-            )
+            vec_wall_vision.append(get_relative_distance_point(start_pos, end_pos, vision_length))
         else:
             vec_wall_vision.append(0)
 
@@ -186,6 +186,9 @@ def vision(
             enemies_in_sight = []
 
             for enemy in other_sprite:
+                if enemy.channel != self_sprite.channel:
+                    continue
+
                 has_intersect = intersect_hit_box(
                     segment_a=(start_pos, end_pos),
                     hit_box=enemy.hit_box,
@@ -202,9 +205,7 @@ def vision(
 
                 for enemy in enemies_in_sight:
                     for segment_hit_box in enemy.hit_box:
-                        intersect_enemy = segments_intersect(
-                            [start_pos, end_pos], segment_hit_box
-                        )
+                        intersect_enemy = segments_intersect([start_pos, end_pos], segment_hit_box)
 
                         if intersect_enemy:
                             dist = get_relative_distance_point(
@@ -220,7 +221,7 @@ def vision(
             else:
                 vec_enemy_vision.append(0)
 
-        else:
+        elif other_sprite.channel == self_sprite.channel:
             has_intersect = intersect_hit_box(
                 segment_a=(start_pos, end_pos),
                 hit_box=other_sprite.hit_box,
@@ -250,6 +251,9 @@ def vision(
         laser_detect = False
 
         for enemy in other_sprite:
+            if enemy.channel != self_sprite.channel:
+                continue
+
             has_intersect = False
             if not (enemy.ray is None) and enemy.id != self_sprite.id:
                 has_intersect = intersect_hit_box(
@@ -267,14 +271,10 @@ def vision(
             closer_dist = 0
             point_of_contact = start_pos
             for ray in lasers_in_sight:
-                intersect_enemy = segments_intersect(
-                    [start_pos, end_pos], ray.hit_box[0]
-                )
+                intersect_enemy = segments_intersect([start_pos, end_pos], ray.hit_box[0])
 
                 if intersect_enemy:
-                    dist = get_relative_distance_point(
-                        intersect_enemy, end_pos, vision_length
-                    )
+                    dist = get_relative_distance_point(intersect_enemy, end_pos, vision_length)
 
                     if dist > closer_dist:
                         closer_dist = dist
@@ -310,12 +310,7 @@ def vision(
         end_pos = (self_sprite.center[0], self_sprite.center[1])
 
         # Wall Detection
-        (
-            vec_wall_vision,
-            local_color,
-            local_width,
-            [start_pos, end_pos],
-        ) = wall_detection(
+        (vec_wall_vision, local_color, local_width, [start_pos, end_pos],) = wall_detection(
             vec_wall_vision,
             local_color,
             local_width,
@@ -323,12 +318,7 @@ def vision(
         )
 
         # Enemy Detection
-        (
-            vec_enemy_vision,
-            local_color,
-            local_width,
-            [start_pos, end_pos],
-        ) = enemy_detection(
+        (vec_enemy_vision, local_color, local_width, [start_pos, end_pos],) = enemy_detection(
             vec_enemy_vision,
             other_sprite,
             local_color,
@@ -336,36 +326,30 @@ def vision(
             [start_pos, end_pos],
         )
 
-        # # Allies detection
-        # if not (self_allies is None):
-        #     ally_detected = False
-        #     for ally in self_allies:
-        #         if ally.id != self_sprite.id:
-        #             has_intersect = intersect_hit_box(
-        #                 segment_a=(start_pos, end_pos),
-        #                 hit_box=ally.hit_box,
-        #             )
+        # Allies detection
+        if not (self_allies is None):
+            ally_detected = False
+            for ally in self_allies:
+                if ally.id != self_sprite.id and ally.channel == self_sprite.channel:
+                    has_intersect = intersect_hit_box(
+                        segment_a=(start_pos, end_pos),
+                        hit_box=ally.hit_box,
+                    )
+                    if has_intersect:
+                        ally_detected = True
+                        break
 
-        #             if has_intersect and (ally.id != self_sprite.id):
-        #                 ally_detected = True
-        #                 break
-
-        #     if ally_detected:
-        #         local_color = pygame.Color("green")
-        #         local_width = 2
-        #         vec_ally_vision.append(1)
-        #     else:
-        #         vec_ally_vision.append(0)
+            if ally_detected:
+                local_color = pygame.Color("green")
+                local_width = 2
+                vec_ally_vision.append(1)
+            else:
+                vec_ally_vision.append(0)
 
         # Laser detection
 
         if other_has_group:
-            (
-                vec_laser_vision,
-                local_color,
-                local_width,
-                [start_pos, end_pos],
-            ) = laser_detection(
+            (vec_laser_vision, local_color, local_width, [start_pos, end_pos],) = laser_detection(
                 vec_laser_vision,
                 other_sprite,
                 local_color,
@@ -377,6 +361,9 @@ def vision(
             ally_laser_detected = False
 
             for ally in self_allies:
+                if ally.channel != self_sprite.channel:
+                    continue
+
                 if not (ally.ray is None) and ally.id != self_sprite.id:
                     has_intersect = intersect_hit_box(
                         segment_a=(start_pos, end_pos),
@@ -400,7 +387,9 @@ def vision(
             try:
                 has_intersect = False
 
-                if not (other_sprite.ray is None):
+                if not (other_sprite.ray is None) and (
+                    other_sprite.channel == self_sprite.channel
+                ):
                     has_intersect = intersect_hit_box(
                         segment_a=(start_pos, end_pos),
                         hit_box=other_sprite.ray.hit_box,
@@ -454,6 +443,9 @@ def vision(
         laser_detect = False
 
         for enemy in other_sprite:
+            if enemy.channel != self_sprite.channel:
+                continue
+
             has_intersect = False
             if not (enemy.ray is None) and enemy.id != self_sprite.id:
                 has_intersect = intersect_hit_box(
@@ -479,6 +471,9 @@ def vision(
         ally_laser_detected = False
 
         for ally in self_allies:
+            if ally.channel != self_sprite.channel:
+                continue
+
             if ally.center != self_sprite.center and not (ally.ray is None):
                 has_intersect = intersect_hit_box(
                     segment_a=ally.ray.hit_box[0],
@@ -505,7 +500,7 @@ def vision(
         try:
             has_intersect = False
 
-            if not (other_sprite.ray is None):
+            if not (other_sprite.ray is None) and (other_sprite.channel == self_sprite.channel):
                 has_intersect = intersect_hit_box(
                     segment_a=other_sprite.ray.hit_box[0],
                     hit_box=self_sprite.hit_box,
@@ -574,6 +569,13 @@ def get_sound_path(filename: str, folder: str = "../../sounds") -> str:
     return os.path.abspath(os.path.join(os.path.dirname(__file__), folder, filename))
 
 
+def play_sound(volume: float, sound_name: str):
+    sound_path = get_sound_path(sound_name)
+    sound = pygame.mixer.Sound(sound_path)
+    sound.play()
+    sound.set_volume(volume)
+
+
 def get_font_path(filename: str, folder: str = "../../fonts") -> str:
     """Return the path of a font.
 
@@ -583,9 +585,7 @@ def get_font_path(filename: str, folder: str = "../../fonts") -> str:
     if not filename:
         raise TypeError("Missing filename argument.")
 
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), folder, filename + ".ttf")
-    )
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), folder, filename + ".ttf"))
 
 
 def get_image_path(filename: str, folder: str = "../../images") -> str:

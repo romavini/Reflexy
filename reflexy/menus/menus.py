@@ -55,9 +55,12 @@ def restart(runner, allow_restart=True):
             "You Died!",
             (SCREEN_WIDTH // 2 + 100, SCREEN_HEIGHT // 2),
         )
+        high_score = max(
+            [runner.channel_stats[channel]["high_score"] for channel in runner.all_channels]
+        )
         create_text(
             runner.screen,
-            f"Score: {runner.player.score}",
+            f"Score: {high_score}",
             (SCREEN_WIDTH // 2 + 100, SCREEN_HEIGHT // 2 + 50),
         )
 
@@ -100,22 +103,18 @@ def check_mouse(button, mouse_pos):
 
 class Menu:
     def __init__(self, volume={"master": 1, "music": 1, "effects": 1}):
+        pygame.init()
         self.volume = volume
         self.sound_running = False
         self.button_sound_switch = None
-
-        pygame.init()
         self.screen, self.clock = create_screen()
-
         self.play_bg_sound()
 
     def check_events(self, screen, buttons, volume):
         """"""
         mouse_pos = pygame.mouse.get_pos()
         button_return = False
-
         for event in pygame.event.get():
-
             if event.type == pygame.QUIT:
                 exit_game()
 
@@ -128,9 +127,10 @@ class Menu:
                             runner = Runner(
                                 volume=volume,
                                 screen=screen,
-                                autonomous=False,
-                                show_vision=False,
-                                allow_restart=True,
+                                autonomous=True,
+                                show_vision=True,
+                                allow_restart=False,
+                                channels=[0, 1, 2],
                             )
                             while True:
                                 runner.run()

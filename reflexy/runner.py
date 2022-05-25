@@ -1,61 +1,71 @@
-import pygame
-import sys
 import time
-from reflexy.menus import main_menu, restart
+from typing import Dict
+
+import pygame  # type: ignore
+from ann.helpers.general_ann_helpers import update_generation  # type: ignore
+
 from reflexy.constants import (
-    MAX_SPAWN_SPIDER,
-    SCREEN_WIDTH,
-    SCREEN_HEIGHT,
     CAPTION,
     CLOCK_TICK_GAME_SPEED,
     CLOCK_TICK_REFERENCE,
-    FONT_SIZE,
-    TIME_SPAWN_SPIDER,
     COOLDOWN_PLAYER_IMMUNE,
+    MAX_SPAWN_SPIDER,
+    SCORE_FONT,
+    SCORE_FONT_SIZE,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+    SCREEN_WIDTH_AI,
+    TIME_SPAWN_SPIDER,
 )
-from reflexy.helpers import (
-    create_text,
-    get_image_path,
-    create_pygame_font,
-    get_minor_distance,
-)
-from reflexy.models.player import Player
+from reflexy.helpers.general_helpers import create_text, exit_game, get_image_path, get_sound_path
+from reflexy.menus.elements import keyboard_keys
 from reflexy.models.laser_spider import LaserSpider
+from reflexy.models.player import Player
 
 
 class Runner:
     def __init__(
         self,
+        volume: Dict[str, float],
+        screen=None,
         autonomous=False,
+        training=False,
         show_vision=False,
         allow_restart=True,
+        channels=[0],
         W_player_matrix=None,
         b_player_matrix=None,
-        W_enemy_matrix=None,
-        b_enemy_matrix=None,
     ):
         self.autonomous = autonomous
+        self.training = training
         self.show_vision = show_vision
-        self.W_enemy_matrix = W_enemy_matrix
-        self.b_enemy_matrix = b_enemy_matrix
+        self.all_channels = channels.copy()
+        self.live_channels = channels.copy()
         self.started = False
         self.exit = False
 
         pygame.init()
 
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        pygame.display.set_caption(CAPTION)
+        if training:
+            self.screen = pygame.display.set_mode((SCREEN_WIDTH + SCREEN_WIDTH_AI, SCREEN_HEIGHT))
+            pygame.display.set_caption("Training", CAPTION)
+        elif screen is None:
+            self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+            pygame.display.set_caption(CAPTION)
+        else:
+            self.screen = screen
 
         self.clock = pygame.time.Clock()
         self.background = self.create_background("background-field.png")
 
-        self.time_refence = time.time()
-        self.time_display = self.time_refence - self.time_refence
-        self.time = self.time_refence
+        self.volume = volume
+
+        self.time_reference = time.time()
+        self.time_display = self.time_reference - self.time_reference
+        self.time = self.time_reference
         self.last_time = self.time
         self.time_game()
-
-        self.text = create_pygame_font(size=FONT_SIZE, bold=True)
+        self.play_bg_sound(volume=volume["master"] * volume["music"])
 
         self.allow_restart = allow_restart
 
@@ -65,28 +75,30 @@ class Runner:
         self.laser_hit_group = pygame.sprite.Group()
         self.effect_group = pygame.sprite.Group()
 
-        self.player = Player(
-            self.screen,
-            self.time,
-            self.autonomous,
-            self.show_vision,
-            W_player_matrix,
-            b_player_matrix,
-        )
-        self.enemy_group.add(
-            LaserSpider(
-                self.screen,
-                self.time,
-                self.autonomous,
-                self.show_vision,
-                self.W_enemy_matrix,
-                self.b_enemy_matrix,
+        [
+            self.player_group.add(
+                Player(
+                    screen=self.screen,
+                    time=self.time,
+                    volume=(self.volume["master"] * self.volume["effects"]),
+                    autonomous=self.autonomous if channel == 0 else True,
+                    show_vision=self.show_vision,
+                    channel=channel,
+                    W=W_player_matrix,
+                    b=b_player_matrix,
+                )
             )
-        )
-        self.player_group.add(self.player)
-        self.player_hit = False
-        self.cd_player_hit = 0
-        self.cd_spawn_spider = self.time
+            for channel in self.live_channels
+        ]
+        self.channel_stats = {}
+        for channel in self.live_channels:
+            self.channel_stats[channel] = {
+                "player_hit": False,
+                "cd_player_hit": 0,
+                "cd_spawn_spider": self.time,
+                "high_score": 0,
+                "time_display": self.time_display,
+            }
 
     @staticmethod
     def create_background(bg_image: str) -> pygame.surface.Surface:
@@ -98,69 +110,69 @@ class Runner:
         if bg_image is None:
             raise TypeError("Missing bg_image argument.")
         elif not isinstance(bg_image, str):
-            raise TypeError(
-                "background image name must be a string." + f" Got {type(bg_image)}."
-            )
+            raise TypeError("background image name must be a string." + f" Got {type(bg_image)}.")
 
         bg = pygame.image.load(get_image_path(bg_image))
 
         return pygame.transform.scale(bg, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    def exit_game(self):
-        pygame.quit()
-        sys.exit()
-
     def time_game(self):
         """Clock of the game."""
         self.time = (
             self.time
-            + (time.time() - self.last_time)
-            * CLOCK_TICK_GAME_SPEED
-            / CLOCK_TICK_REFERENCE
+            + (time.time() - self.last_time) * CLOCK_TICK_GAME_SPEED / CLOCK_TICK_REFERENCE
         )
-        self.time_display = round(self.time - self.time_refence, 1)
+        self.time_display = round(self.time - self.time_reference, 1)
         self.last_time = time.time()
 
-    def has_collision(self) -> bool:
-        """Check collisions in each frame."""
-        if self.player.attacking:
+    def play_bg_sound(self, volume: float):
+        sound_path = get_sound_path("BG.wav")
+        self.sound = pygame.mixer.Sound(sound_path)
+        self.sound.play(-1)
+        self.sound.set_volume(volume)
+
+    def has_collision(self, channel: int) -> bool:
+        """Check collisions in each frame, for a passing channel."""
+        for player in self.player_group.sprites():
+            if player.attacking:
+                for enemy in self.enemy_group.sprites():
+                    if pygame.sprite.collide_mask(
+                        enemy,
+                        player,
+                    ) and ((enemy.channel == player.channel) and (enemy.channel == channel)):
+                        self.kill_spider(enemy)
+                        player.score += 1
+
+                return False
+
+        for enemy in self.enemy_group.sprites():
+            for laser in self.laser_hit_group.sprites():
+                if (
+                    pygame.sprite.collide_mask(
+                        enemy,
+                        laser,
+                    )
+                    and enemy.id != laser.id
+                    and enemy.channel == laser.channel
+                ):
+                    self.kill_spider(enemy)
+                    player.score += 1
+
+        bool_collision = any(
             [
-                self.kill_spider(sprite)
-                for sprite in self.enemy_group.sprites()
-                if pygame.sprite.spritecollide(
-                    sprite,
-                    self.player_group,
-                    False,
-                    pygame.sprite.collide_mask,  # type: ignore
+                pygame.sprite.collide_mask(
+                    enemy,
+                    player,
                 )
+                for enemy in self.enemy_group.sprites()
+                for player in self.player_group.sprites()
+                if enemy.channel == player.channel and enemy.channel == channel
             ]
-
-            return False
-
-        [
-            self.kill_spider(sprite)
-            for sprite in self.enemy_group.sprites()
-            for laser in self.laser_hit_group
-            if pygame.sprite.collide_mask(
-                sprite,
-                laser,
-            )
-            and sprite.id != laser.id
-        ]
-
-        bool_collision = bool(
-            pygame.sprite.groupcollide(
-                self.player_group,
-                self.enemy_group,
-                False,
-                False,
-                pygame.sprite.collide_mask,  # type: ignore
-            )
         )
 
         return bool_collision
 
-    def has_hit(self) -> bool:
+    def has_hit(self, channel) -> bool:
         """Check if has hit in each frame."""
         for enemy in self.enemy_group.sprites():
             if enemy.ray:
@@ -172,14 +184,26 @@ class Runner:
                 ):
                     self.laser_hit_group.add(enemy.ray)
 
-        bool_hit = bool(
-            pygame.sprite.groupcollide(
-                self.laser_hit_group,
-                self.player_group,
-                False,
-                False,
-                pygame.sprite.collide_mask,  # type: ignore
-            )
+        # bool_hit = bool(
+        #     pygame.sprite.groupcollide(
+        #         self.laser_hit_group,
+        #         self.player_group,
+        #         False,
+        #         False,
+        #         pygame.sprite.collide_mask,  # type: ignore
+        #     )
+        # )
+
+        bool_hit = any(
+            [
+                pygame.sprite.collide_mask(
+                    laser,
+                    player,
+                )
+                for laser in self.laser_hit_group.sprites()
+                for player in self.player_group.sprites()
+                if laser.channel == player.channel and laser.channel == channel
+            ]
         )
 
         return bool_hit
@@ -187,35 +211,48 @@ class Runner:
     def hp(self):
         """Update player's lives and blinking state."""
         if self.enemy_group.sprites():
-            if (self.has_collision() or self.has_hit()) and not self.player_hit:
-                self.player.hp -= 1
-                self.player_hit = True
-                self.cd_player_hit = self.time
-                self.player.set_spawn()
-                self.player.dead = True
+            for channel in self.live_channels:
+                for player in self.player_group.sprites():
+                    if player.channel != channel:
+                        continue
 
-            if self.player.dead:
-                self.player.blink_damage()
+                    if (
+                        self.has_collision(channel) or self.has_hit(channel)
+                    ) and not self.channel_stats[channel]["player_hit"]:
+                        player.hp -= 1
+                        self.channel_stats[channel]["player_hit"] = True
+                        self.channel_stats[channel]["cd_player_hit"] = self.time
 
-            if (
-                self.player_hit
-                and self.time - self.cd_player_hit > COOLDOWN_PLAYER_IMMUNE
-            ):
-                self.player.dead = False
-                self.player.blinking_damage = False
-                self.player_hit = False
-                self.player.blinking_damage = 0
+                        if player.hp <= 0:
+                            self.clear_channel(channel)
+                            player.dead = True
+                        else:
+                            player.set_spawn()
+                            player.dead = True
 
-    def respawn_spider(self):
+                    if player.dead:
+                        player.blink_damage()
+
+                    if (
+                        self.channel_stats[channel]["player_hit"]
+                        and self.time - self.channel_stats[channel]["cd_player_hit"]
+                        > COOLDOWN_PLAYER_IMMUNE
+                    ):
+                        player.dead = False
+                        player.blinking_damage = False
+                        self.channel_stats[channel]["player_hit"] = False
+                        player.blinking_damage = 0
+
+    def respawn_spider(self, channel: int):
         """Add a Spider."""
         self.enemy_group.add(
             LaserSpider(
-                self.screen,
-                self.time,
-                self.autonomous,
-                self.show_vision,
-                self.W_enemy_matrix,
-                self.b_enemy_matrix,
+                screen=self.screen,
+                time=self.time,
+                volume=(self.volume["master"] * self.volume["effects"]),
+                autonomous=False,
+                show_vision=self.show_vision,
+                channel=channel,
             )
         )
 
@@ -230,69 +267,79 @@ class Runner:
             sprite.ray  # type: ignore
 
         sprite.kill()  # type: ignore
-        self.player.score += 1
+
+    def clear_channel(self, channel):
+        """Clear channel."""
+        for enemy in self.enemy_group.sprites():
+            if enemy.channel == channel:
+                self.kill_spider(enemy)
+
+        for player in self.player_group.sprites():
+            if player.channel == channel:
+                self.channel_stats[channel]["high_score"] = player.score
+                player.kill()
+
+        self.channel_stats[channel]["time_display"] = self.time_display
+        try:
+            self.live_channels.remove(channel)
+        except ValueError:
+            pass
 
     def check_events(self):
         """Check game events in each frame."""
-        if (
-            self.time - self.cd_spawn_spider > TIME_SPAWN_SPIDER
-            and len(self.enemy_group) <= MAX_SPAWN_SPIDER
-        ):
-            self.respawn_spider()
-            self.cd_spawn_spider = self.time
+        for channel in self.live_channels:
+            if (
+                self.time - self.channel_stats[channel]["cd_spawn_spider"] > TIME_SPAWN_SPIDER
+                and (len(self.enemy_group) + 1) <= MAX_SPAWN_SPIDER
+            ):
+                self.respawn_spider(channel)
+                self.channel_stats[channel]["cd_spawn_spider"] = self.time
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+            for player in self.player_group.sprites():
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        exit_game()
 
-            if event.type == pygame.KEYDOWN:
-                self.player.keydown(event.key)
+                    if event.type == pygame.KEYDOWN:
+                        player.key_down(event.key)
 
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_ESCAPE:
-                    if self.autonomous:
-                        self.exit = True
-                    else:
-                        self.exit_game()
+                    if event.type == pygame.KEYUP:
+                        if event.key == pygame.K_ESCAPE:
+                            if self.autonomous:
+                                self.exit = True
+                            else:
+                                exit_game()
 
-                if event.key == pygame.K_SPACE:
-                    self.player.attack()
+                        if event.key == pygame.K_SPACE:
+                            player.attack()
 
-                self.player.keyup(event.key)
+                        player.key_up(event.key)
 
     def update_score_lives(self):
         """Update player's lives and score."""
         create_text(
-            self,
-            "Lives = " + str(self.player.hp),
+            self.screen,
+            "Lives = " + str([player.hp for player in self.player_group.sprites()][0]),
             (SCREEN_WIDTH // 10, SCREEN_HEIGHT // 8),
+            size=SCORE_FONT_SIZE,
+            font_name=SCORE_FONT,
         )
         create_text(
-            self,
-            str(self.player.score),
+            self.screen,
+            str([player.score for player in self.player_group.sprites()][0]),
             (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 8),
+            size=SCORE_FONT_SIZE,
+            font_name=SCORE_FONT,
         )
         create_text(
-            self,
+            self.screen,
             f"Time = {str(self.time_display)}",
             (SCREEN_WIDTH - SCREEN_WIDTH // 10, SCREEN_HEIGHT // 8),
+            size=SCORE_FONT_SIZE,
+            font_name=SCORE_FONT,
         )
 
-    def update_generation(self, generation, pop, max_pop):
-        create_text(
-            self,
-            "Geneation = " + str(generation + 1),
-            (SCREEN_WIDTH - SCREEN_WIDTH // 8, SCREEN_HEIGHT // 8 * 2),
-        )
-
-        create_text(
-            self,
-            f"Pop = {str(pop + 1)}/{max_pop}",
-            (SCREEN_WIDTH - SCREEN_WIDTH // 10, SCREEN_HEIGHT // 8 * 3),
-        )
-
-    def update_frame(self, generation, pop, max_pop):
+    def update_frame(self, generation, pop, max_pop, best_score, keyboard):
         """Draw all elements on the screen."""
         self.screen.blit(self.background, (0, 0))
         self.time_game()
@@ -304,22 +351,23 @@ class Runner:
         ]:
             group.draw(self.screen)
 
-        self.enemy_group.update(self.time, self.player, self.enemy_group)
+        self.enemy_group.update(self.time, self.player_group, self.enemy_group)
         self.player_group.update(self.time, self.enemy_group)
         self.update_score_lives()
-        if not (generation is None):
-            self.update_generation(generation, pop, max_pop)
+
+        if self.autonomous:
+            update_generation(self, generation, pop, max_pop, best_score, keyboard)
 
         pygame.display.update()
 
-    def run(self, time=None, generation=None, pop=None, max_pop=None):
+    def run(self, time=None, generation=None, pop=None, max_pop=None, best_score=None):
         """Loop each frame of the game."""
-        main_menu(self)
+        keyboard = keyboard_keys()
+        while sum([player.hp for player in self.player_group.sprites()]) > 0:
 
-        while self.player.hp > 0:
             self.clock.tick(CLOCK_TICK_GAME_SPEED)
             self.check_events()
-            self.update_frame(generation, pop, max_pop)
+            self.update_frame(generation, pop, max_pop, best_score, keyboard)
             self.hp()
 
             if self.exit:
@@ -329,6 +377,8 @@ class Runner:
                 if self.time_display >= time:
                     break
 
+        self.sound.stop()
+
         if self.autonomous:
             return (
                 self.time_display,
@@ -336,5 +386,3 @@ class Runner:
                 self.player.hp,
                 self.exit,
             )
-
-        restart(self)
